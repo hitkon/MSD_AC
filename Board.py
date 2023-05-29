@@ -3,12 +3,12 @@ import pygame_menu
 import sys
 
 # gui params init
-size = width, height = 800, 490
+size = width, height = 1200, 210
 speed = [1, 1]
 black = 0, 0, 0
-cell_size = 7
+cell_size = 3
 scroll_x = 0
-scroll_vel = 1
+scroll_vel = 4
 clock = pygame.time.Clock()
 
 pygame.init()
@@ -19,10 +19,10 @@ colors = [(255, 255, 255), (155, 155, 155), (0, 0, 102), (0, 102, 51), (255, 255
 map_h, map_w = 0, 0
 map = []
 with open("map/map0", "r") as f:
-    h, w, n = [int(x) for x in next(f).split()]
-    map_w, map_h = w, h
-    for _ in range(h+1):
-        map.append([0 for _ in range(w+1)])
+    w, h, n = [int(x) for x in next(f).split()]
+    map_h, map_w = h, w
+    for _ in range(w + 1):
+        map.append([0 for _ in range(h + 1)])
     for _ in range(n):
         x0, y0, x1, y1, t = [int(x) for x in next(f).split()]
         for i in range(x0, x1+1):
@@ -40,15 +40,15 @@ while True:
 
     # moving screen with arrows
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and scroll_x < map_w:
+    if keys[pygame.K_LEFT] and scroll_x < 0:
         scroll_x += scroll_vel
-    if keys[pygame.K_RIGHT] and scroll_x > 0:
+    if keys[pygame.K_RIGHT] and scroll_x > -988:
         scroll_x -= scroll_vel
 
     # map drawing
-    for i in range(map_h+1):
-        for j in range(map_w+1):
+    for i in range(map_w + 1):
+        for j in range(map_h + 1):
             pygame.draw.rect(screen, colors[map[i][j]],
-                             pygame.Rect(i * cell_size + scroll_x, j * cell_size, cell_size, cell_size))
+                             pygame.Rect((i + scroll_x) * cell_size, j * cell_size, cell_size, cell_size))
 
     pygame.display.flip()
