@@ -11,9 +11,8 @@ scroll_x = 0
 scroll_vel = 1
 clock = pygame.time.Clock()
 
-#border_size = 2
 pygame.init()
-# colors_ids: 0 - not usable, 1 - pedestrian road, 2 - road, 3 - crossing, 4 - vehicle , 5-pedestrian
+# colors_ids: 0 - not usable, 1 - pavement, 2 - road, 3 - crossing, 4 - vehicle, 5 - pedestrian
 colors = [(255, 255, 255), (155, 155, 155), (0, 0, 102), (0, 102, 51), (255, 255, 102), (0, 0, 0)]
 
 # map initialization
@@ -33,17 +32,11 @@ with open("map/map0", "r") as f:
 print(map)           # debugging purposes
 screen = pygame.display.set_mode(size)
 
-# todo fill in what this section does
-ball = pygame.image.load("intro_ball.gif")
-ballrect = ball.get_rect()
-print(ball.get_rect())       # debugging purposes
-
 # main loop
 while True:
     clock.tick(100)
     for event in pygame.event.get():
         if event.type == pygame.QUIT: pygame.quit()
-    #screen.fill(black)
 
     # moving screen with arrows
     keys = pygame.key.get_pressed()
@@ -58,12 +51,4 @@ while True:
             pygame.draw.rect(screen, colors[map[i][j]],
                              pygame.Rect(i * cell_size + scroll_x, j * cell_size, cell_size, cell_size))
 
-    # ballrect = ballrect.move(speed)
-    # if ballrect.left < 0 or ballrect.right > width:
-    #     speed[0] = -speed[0]
-    # if ballrect.top < 0 or ballrect.bottom > height:
-    #     speed[1] = -speed[1]
-
-
-    # screen.blit(ball, ballrect)
     pygame.display.flip()
