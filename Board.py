@@ -36,7 +36,9 @@ screen = pygame.display.set_mode(size)
 while True:
     clock.tick(100)
     for event in pygame.event.get():
-        if event.type == pygame.QUIT: pygame.quit()
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
 
     # moving screen with arrows
     keys = pygame.key.get_pressed()
