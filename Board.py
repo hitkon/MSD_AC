@@ -3,8 +3,8 @@ import pygame_menu
 import sys
 
 # gui params init
-main_window_size = main_window_width, main_window_height = 1200, 210
-sub_window_size = sub_window_width, sub_window_height = 200, 210
+main_window_size = main_window_width, main_window_height = 1200, 420
+sub_window_size = sub_window_width, sub_window_height = 1200, 210
 speed = [1, 1]
 black = 0, 0, 0
 cell_size = 3
@@ -85,6 +85,6 @@ while True:
                              pygame.Rect((i + scroll_x) * cell_size, j * cell_size, cell_size, cell_size))
 
     # Rysowanie drugiego okna na głównym ekranie
-    main_screen.blit(sub_screen, (1000, 5))
+    main_screen.blit(sub_screen, ((main_window_width - sub_window_width) // 2, main_window_height - sub_window_height))
 
     pygame.display.flip()
