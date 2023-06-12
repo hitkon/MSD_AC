@@ -70,7 +70,8 @@ class Board:
         self.sub_screen.fill((255, 255, 255))
         self.create_legend()
 
-        self.total_width = self.map_w * self.cell_size
+        #self.total_width = self.map_w * self.cell_size
+        self.total_width = 2150
         # self.scrollbar_width = self.total_width /
         self.scrollbar_mult = (self.total_width - self.main_window_width) / (
                     self.main_window_width - self.scrollbar_width)
