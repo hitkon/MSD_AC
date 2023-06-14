@@ -1,8 +1,10 @@
 import pygame
 import sys
 
+
 class Board:
     def __init__(self):
+        self.total_width = None
         pygame.init()
         self.clock = pygame.time.Clock()
         self.main_window_size = self.main_window_width, self.main_window_height = 1200, 420
@@ -42,18 +44,24 @@ class Board:
                         self.map[i][j] = t
 
     def create_legend(self):
-        counter = 10
+        spacing = 270
+        elems_in_col = 5
+        counter = [10, 10]
         for label in self.legend_labels:
             self.legend_elems.append(self.font.render(label, True, (0, 0, 0)))
-            self.sub_screen.blit(self.legend_elems[-1], (10, counter))
-            counter += 30
+            self.sub_screen.blit(self.legend_elems[-1], counter)
+            counter[1] += 30
+            if counter[1] > (elems_in_col+1)*30:
+                counter[0] += spacing
+                counter[1] = 40
         for i in range(1, len(self.legend_elems)):
-            pygame.draw.rect(self.sub_screen, self.colors[i], pygame.Rect(150, 10 + 30 * i, 20, 20))
+            pygame.draw.rect(self.sub_screen, self.colors[i], pygame.Rect(180 + spacing*((i-1)//elems_in_col),
+                                                                          40 + 30 * ((i-1) % elems_in_col), 20, 20))
 
     def is_click_inside_scrollbar(self, event):
         return (
-            event.pos[0] >= self.scrollbar_x and event.pos[0] <= self.scrollbar_x + self.scrollbar_width and
-            self.main_window_height - self.scrollbar_height <= event.pos[1] and self.main_window_height >= event.pos[1]
+                self.scrollbar_x <= event.pos[0] <= self.scrollbar_x + self.scrollbar_width and
+                self.main_window_height - self.scrollbar_height <= event.pos[1] <= self.main_window_height
         )
 
     def start(self):
@@ -118,7 +126,7 @@ class Board:
             current_time = pygame.time.get_ticks()
             elapsed_time = current_time - crossing_start_time
 
-            if crossing_closed == False and elapsed_time >= crossing_duration:
+            if crossing_closed is False and elapsed_time >= crossing_duration:
                 crossing_closed = True
                 crossing_start_time = current_time
                 for i in range(self.map_w + 1):
@@ -126,7 +134,7 @@ class Board:
                         if i < 300:
                             if self.map[i][j] == 3:  # crossing
                                 self.map[i][j] = 6  # crossing_close
-            elif crossing_closed == True and elapsed_time >= crossing_close_duration:
+            elif crossing_closed is True and elapsed_time >= crossing_close_duration:
                 crossing_closed = False
                 crossing_start_time = current_time
                 for i in range(self.map_w + 1):
