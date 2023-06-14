@@ -71,7 +71,7 @@ class Board:
         self.create_legend()
 
         #self.total_width = self.map_w * self.cell_size
-        self.total_width = 2150
+        self.total_width = 2190
         # self.scrollbar_width = self.total_width /
         self.scrollbar_mult = (self.total_width - self.main_window_width) / (
                     self.main_window_width - self.scrollbar_width)
