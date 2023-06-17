@@ -3,19 +3,59 @@ from abc import abstractmethod
 
 class RoadVehicle:
     # all in cell units
-    speed = 0
     acceleration = 0
     width = 0
     length = 0
-    max_speed = 28            # 50km/h = 14m/s
+    max_speed = 28  # 50km/h = 14m/s
 
-    preferred_lane = 'l'      # 'l' for left, 'r' for right
-    can_turn = False          # True if the vehicle can turn on the crossings
-    stops = False             # True if the vehicle stops at the bus stop
+    look_ahead_variable = 28
+
+    preferred_lane = 'l'  # 'l' for left, 'r' for right
+    can_turn = False  # True if the vehicle can turn on the crossings
+    stops = False  # True if the vehicle stops at the bus stop
 
     @abstractmethod
     def __init__(self, position):
         self.position = position
+        self.speed = 0
+        self.preferred_lane = 'l'
+
+    def look_ahead_static_obstacle(self, map: list) -> int:
+        x, y = self.position
+        i = 1
+
+        while i < RoadVehicle.look_ahead_variable:
+            # todo zalozenie, jak pieszy bedzie wchodzic na pasy bez swietal tez tam ustawic crossign_closed?
+            if map[x + i][y] == 6:
+                break
+            if map[x + i][y] == 5:
+                break
+
+            i += 1
+
+        return i
+
+    def look_ahead_moving_obstacle(self, map: list) -> int:
+        #todo check speeed of obstacle before us and multiply i
+        x, y = self.position
+        i = 1
+
+        while i < RoadVehicle.look_ahead_variable:
+            if map[x + i][y] == 4:
+                break
+            i += 1
+        return i
+
+    def vehicle_acceleration(self):
+        pass
+        if self.speed < self.max_speed:
+            self.speed = min(self.speed + self.acceleration, self.max_speed)
+
+    def vehicle_deacceleration(self, map: list):
+        distance_to_obstacle = min(self.look_ahead_moving_obstacle(map), self.look_ahead_static_obstacle(map))
+        if self.speed > distance_to_obstacle:
+            self.speed =  max(self.speed - self.acceleration, 0)
+
 
 
 class Car(RoadVehicle):
@@ -25,6 +65,7 @@ class Car(RoadVehicle):
         self.width = 4
         self.length = 9
         self.can_turn = True
+        self.max_speed = 28
 
 
 class Bus(RoadVehicle):
@@ -85,4 +126,3 @@ class Bicycle:
 
     def __init__(self, position):
         self.position = position
-

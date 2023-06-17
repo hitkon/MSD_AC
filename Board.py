@@ -82,10 +82,6 @@ class Board:
         self.main_loop()
 
     def main_loop(self):
-        crossing_closed = False
-        crossing_duration = 40000
-        crossing_close_duration = 20000
-        crossing_start_time = pygame.time.get_ticks()
 
         while True:
 
@@ -131,8 +127,6 @@ class Board:
             )
             pygame.display.flip()
 
-            current_time = pygame.time.get_ticks()
-            elapsed_time = current_time - crossing_start_time
 
             self.engine.iteration()
 

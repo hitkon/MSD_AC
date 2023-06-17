@@ -31,7 +31,11 @@ class Engine:
     def get_map(self):  # todo
         return [[0 for _ in range(self.map_h)] for i in range(self.map_w)]
 
-    def is_occupied(self, x: int, y: int):  # todo
+    def is_occupied(self, x: int, y: int) -> bool:  # todo
+
+        if self.map[x][y] == 4 or self.map[x][y] == 5:
+            return False
+
         return True
 
     def spawn_cars(self):  # todo
@@ -59,7 +63,7 @@ class Engine:
     def traffic_lights_crossing(self):
         # stale (ilosc iteracji po ktorych nastepuje zmiana)
         crossing_open_duration = 40
-        crossing_close_duration = 20
+        crossing_close_duration = 10
 
         if self.crossing_closed is False and self.iter_counter % crossing_open_duration == 0:
             self.crossing_closed = True
