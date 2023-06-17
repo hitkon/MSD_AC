@@ -1,6 +1,8 @@
+from time import sleep
+
 import pygame
 import sys
-
+import Engine
 
 class Board:
     def __init__(self):
@@ -30,6 +32,7 @@ class Board:
         self.scrollbar_height = 20
         self.scrollbar_pressed = False
         self.scrollbar_mult = 0
+        self.engine = None
 
     def init_map(self):
         with open("map/map0", "r") as f:
@@ -66,6 +69,7 @@ class Board:
 
     def start(self):
         self.init_map()
+        self.engine = Engine.Engine(self.map)
         self.main_screen = pygame.display.set_mode(self.main_window_size)
         self.sub_screen = pygame.Surface(self.sub_window_size)
         self.sub_screen.fill((255, 255, 255))
@@ -84,6 +88,7 @@ class Board:
         crossing_start_time = pygame.time.get_ticks()
 
         while True:
+
             self.clock.tick(100)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -129,22 +134,10 @@ class Board:
             current_time = pygame.time.get_ticks()
             elapsed_time = current_time - crossing_start_time
 
-            if crossing_closed is False and elapsed_time >= crossing_duration:
-                crossing_closed = True
-                crossing_start_time = current_time
-                for i in range(self.map_w + 1):
-                    for j in range(self.map_h + 1):
-                        if i < 300:
-                            if self.map[i][j] == 3:  # crossing
-                                self.map[i][j] = 6  # crossing_close
-            elif crossing_closed is True and elapsed_time >= crossing_close_duration:
-                crossing_closed = False
-                crossing_start_time = current_time
-                for i in range(self.map_w + 1):
-                    for j in range(self.map_h + 1):
-                        if i < 300:
-                            if self.map[i][j] == 6:  # crossing_close
-                                self.map[i][j] = 3  # crossing
+            self.engine.iteration()
+
+
+
 
 
 if __name__ == '__main__':
