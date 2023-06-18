@@ -126,12 +126,7 @@ class Board:
                 pygame.Rect(self.scrollbar_x, self.main_window_height - self.scrollbar_height, self.scrollbar_width, self.scrollbar_height)
             )
             pygame.display.flip()
-
-
             self.engine.iteration()
-
-
-
 
 
 if __name__ == '__main__':

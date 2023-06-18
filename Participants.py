@@ -60,7 +60,7 @@ class RoadVehicle:
 
 class Car(RoadVehicle):
     def __init__(self, position):
-        super.__init__(position)
+        super().__init__(position)
         self.acceleration = 4
         self.width = 4
         self.length = 9
@@ -70,7 +70,7 @@ class Car(RoadVehicle):
 
 class Bus(RoadVehicle):
     def __init__(self, position):
-        super.__init__(position)
+        super().__init__(position)
         self.acceleration = 3
         self.width = 5
         self.length = 24
@@ -81,7 +81,7 @@ class Bus(RoadVehicle):
 
 class BigBus(RoadVehicle):
     def __init__(self, position):
-        super.__init__(position)
+        super().__init__(position)
         self.acceleration = 3
         self.width = 5
         self.length = 36
@@ -101,7 +101,7 @@ class Truck(RoadVehicle):
 
 class Scooter(RoadVehicle):
     def __init__(self, position):
-        super.__init__(position)
+        super().__init__(position)
         self.acceleration = 3
         self.width = 2
         self.length = 4
