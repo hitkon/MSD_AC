@@ -1,10 +1,6 @@
 from abc import abstractmethod
 
 
-# czy kazdy obiekt klasy RoadVehicle bedzie miec dostep to tej mapy 3x1800?
-# jak pojazd bedzie zaznaczony w tej tablicy?
-
-# czy Iteration w enignsn bedzie mialo te dwie petele
 
 
 class RoadVehicle:
@@ -71,8 +67,9 @@ class RoadVehicle:
         self.vehicle_acceleration()
         self.vehicle_deacceleration()
 
-        # if isinstance(self, Car):
-        #     self.turn cos cos
+        if isinstance(self, Car):
+            self.change_lane()
+
 
 
 class Crossing:
@@ -94,6 +91,11 @@ class Car(RoadVehicle):
         self.length = 9
         self.can_turn = True
         self.max_speed = 28
+
+
+    def change_lane(self):
+        #make implementation
+        pass
 
 
 class Bus(RoadVehicle):
