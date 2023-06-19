@@ -20,7 +20,10 @@ class Engine:
     crossing_open_duration = 40
     crossing_close_duration = 19
 
-    def __init__(self, map: list):
+
+
+
+    def __init__(self, map: list, pedestrian_arreas: list):
         self.map_w = len(map)
         self.map_h = len(map[0])
         self.map = map
@@ -30,6 +33,7 @@ class Engine:
         self.kawiory_cars = [[], []]
         self.kijowska_to_spawn = queue.Queue()
         self.ak_to_spawn = queue.Queue()
+        self.pedestrian_areas = pedestrian_arreas
 
     def get_map(self):  # todo
         return [[0 for _ in range(self.map_h)] for i in range(self.map_w)]
@@ -131,16 +135,30 @@ class Engine:
     def iteration(self):  # todo
         # self.spawn_cars()
         self.traffic_lights_crossing()
+        self.spawn_pedestrians()
+        self.move_pedestrians()
         self.iter_counter += 1
+
 
     def move_cars(self):  # todo
         pass
 
-    def spawn_pedestrians(self):  # todo
-        pass
+    def spawn_pedestrians(self):
+        if not self.crossing_closed:
+            return
+        for area in self.pedestrian_areas:
+            if randint(0, 100) <= 33:
+                if randint(1, 2) == 1:
+                    area.spawn_pedestrian_up()
+                else:
+                    area.spawn_pedestrian_down()
 
-    def move_pedestrians(self):  # todo
-        pass
+
+    def move_pedestrians(self):
+        if self.crossing_closed:
+            return
+        for area in self.pedestrian_areas:
+            area.iterate()
 
     def add_car(self, vehicle):
         pass

@@ -6,6 +6,7 @@ import Engine
 
 class Board:
     def __init__(self):
+        self.pedestrian_areas = []
         self.total_width = None
         pygame.init()
         self.clock = pygame.time.Clock()
@@ -33,6 +34,19 @@ class Board:
         self.scrollbar_pressed = False
         self.scrollbar_mult = 0
         self.engine = None
+
+    def load_pedestrian_spawn_points(self):
+        with open("map/people_spawn_points0.txt") as f:
+            n = int(f.readline())
+            for _ in range(n):
+                args = f.readline().split(" ")
+                crossing = Engine.PedestrianCrossing(width_range=(int(args[0]), int(args[1])),
+                                                     up_spawn_range=(int(args[2]), int(args[3])),
+                                                     down_spawn_range=(int(args[4]), int(args[5])),
+                                                     type=int(args[6]))
+                self.pedestrian_areas.append(crossing)
+
+
 
     def init_map(self):
         with open("map/map0", "r") as f:
@@ -69,17 +83,32 @@ class Board:
 
     def start(self):
         self.init_map()
-        self.engine = Engine.Engine(self.map)
+        self.load_pedestrian_spawn_points()
+        self.engine = Engine.Engine(self.map, self.pedestrian_areas)
         self.main_screen = pygame.display.set_mode(self.main_window_size)
         self.sub_screen = pygame.Surface(self.sub_window_size)
         self.sub_screen.fill((255, 255, 255))
         self.create_legend()
+
         #self.total_width = self.map_w * self.cell_size
         self.total_width = 2190
         # self.scrollbar_width = self.total_width /
         self.scrollbar_mult = (self.total_width - self.main_window_width) / (
                     self.main_window_width - self.scrollbar_width)
         self.main_loop()
+
+    def draw_pedastrians(self):
+        for area in self.pedestrian_areas:
+            for i in range(area.total_width):
+                for j in range(area.total_height):
+                    if area.map[i][j] is not None:
+                        pygame.draw.rect(
+                            self.main_screen, self.colors[5],
+                            pygame.Rect((i + area.width_range[0] + self.scroll_x) * self.cell_size,
+                                        (j + area.up_spawn_range[0]) * self.cell_size, self.cell_size,
+                                        self.cell_size)
+                        )
+
 
     def main_loop(self):
 
@@ -91,9 +120,10 @@ class Board:
                     pygame.quit()
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
+                    print(event.pos[0], event.pos[1])
                     if event.button == 1 and self.is_click_inside_scrollbar(event):
                         self.scrollbar_pressed = True
-                        print(event.pos[0], event.pos[1])
+                        #print(event.pos[0], event.pos[1])
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:
                         self.scrollbar_pressed = False
@@ -125,6 +155,8 @@ class Board:
                 self.main_screen, (0, 0, 0),
                 pygame.Rect(self.scrollbar_x, self.main_window_height - self.scrollbar_height, self.scrollbar_width, self.scrollbar_height)
             )
+
+            self.draw_pedastrians()
             pygame.display.flip()
             self.engine.iteration()
 
