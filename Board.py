@@ -104,11 +104,11 @@ class Board:
                         self.scrollbar_x = min(self.main_window_width - self.scrollbar_width, self.scrollbar_x)
                         self.scroll_x = - self.scrollbar_x * self.scrollbar_mult
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT] and self.scroll_x < 0:
-                self.scroll_x += self.scroll_vel
-            if keys[pygame.K_RIGHT] and self.scroll_x > -988:
-                self.scroll_x -= self.scroll_vel
+            # keys = pygame.key.get_pressed()
+            # if keys[pygame.K_LEFT] and self.scroll_x < 0:
+            #     self.scroll_x += self.scroll_vel
+            # if keys[pygame.K_RIGHT] and self.scroll_x > -988:
+            #     self.scroll_x -= self.scroll_vel
 
             self.main_screen.fill((0, 0, 0))
             for i in range(self.map_w + 1):

@@ -10,6 +10,16 @@ def rand_with_probability(prob: Fraction):
     return randint(1, prob[1]) <= prob[0]
 
 
+def map_pos_to_arr_ind(position: tuple):
+    if position[1] < 21:
+        return position[0], 0
+    if position[1] < 28:
+        return position[0], 1
+    if position[1] < 34:
+        return position[0], 2
+    return position[0], 3
+
+
 class Engine:
     # todo real values
     # probability of turn
@@ -30,17 +40,35 @@ class Engine:
         self.kawiory_cars = [[], []]
         self.kijowska_to_spawn = queue.Queue()
         self.ak_to_spawn = queue.Queue()
+        self.cars = [[0 for _ in range(3)] for i in range(self.map_w)]
+        two_lanes = [(0, 263), (613, 657), (1168, 1215)]
+        for tup in two_lanes:
+            for i in range(tup[0], tup[1]):
+                self.cars[i][1] = None
 
     def get_map(self):  # todo
         return [[0 for _ in range(self.map_h)] for i in range(self.map_w)]
 
-    def is_occupied(self, x: int, y: int) -> bool:  # todo
-        if self.map[x][y] == 4 or self.map[x][y] == 5:
+    def is_occupied(self, x: int, y: int) -> bool:   # should work
+        x_ind, y_ind = map_pos_to_arr_ind((x, y))
+        if self.cars[x_ind][y_ind] != 0:
+            return True
+        if y_ind == 0:
+            for i in range(1, min(1 + BigBus.length, x_ind + 1)):
+                if isinstance(self.cars[x_ind-i][y_ind], RoadVehicle):
+                    car = self.cars[x_ind-i][y_ind]
+                    dist = i
+                    return dist > car.length
+            return False
+        else:
+            for i in range(1, min(1 + BigBus.length, self.map_w)):
+                if isinstance(self.cars[x_ind+i][y_ind], RoadVehicle):
+                    car = self.cars[x_ind+i][y_ind]
+                    dist = i
+                    return dist > car.length
             return False
 
-        return True
-
-    def spawn_cars(self):  # todo
+    def spawn_cars(self):
         # Budryka & Kawiory
         prob_budryka_spawn = Fraction(14, 1000)
         if rand_with_probability(prob_budryka_spawn):
@@ -144,4 +172,6 @@ class Engine:
         pass
 
     def add_car(self, vehicle):
-        pass
+        pos = map_pos_to_arr_ind(vehicle.position)
+        self.cars[pos[0]][pos[1]] = vehicle
+
