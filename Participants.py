@@ -17,57 +17,146 @@ class RoadVehicle:
     stops = False  # True if the vehicle stops at the bus stop
 
     @abstractmethod
-    def __init__(self, position):
+    def __init__(self, position: (int, int), map: list):  # pozacja w tabeli tej malej (3x1400), map (ta na 3x1400)
         self.position = position
         self.speed = 0
+        self.map = map
         self.preferred_lane = 'l'
 
-    def look_ahead_static_obstacle(self, map: list) -> int:
+    def look_ahead_static_obstacle(self) -> int:
         x, y = self.position
-        i = 1
+        i = 0
 
-        while i < RoadVehicle.look_ahead_variable:
-            # todo zalozenie, jak pieszy bedzie wchodzic na pasy bez swietal tez tam ustawic crossign_closed?
-            if map[x + i][y] == 6:
+        while RoadVehicle.look_ahead_variable > i > 0 and i < len(self.map[0]):
+            if isinstance(self.map[y][x + i], Crossing):
+                if self.map[y][x + i].open is False:
+                    break
+            if self.map[y][x + 1] is None:
                 break
-            if map[x + i][y] == 5:
-                break
 
-            i += 1
+            if y == 0:
+                i -= 1
+            else:
+                i += 1
 
-        return i
+        return abs(i)
 
-    def look_ahead_moving_obstacle(self, map: list) -> int:
-        #todo check speeed of obstacle before us and multiply i
+    def look_ahead_moving_obstacle(self) -> int:
         x, y = self.position
-        i = 1
+        i = 0
 
-        while i < RoadVehicle.look_ahead_variable:
-            if map[x + i][y] == 4:
+        while RoadVehicle.look_ahead_variable > i > 0 and i < len(self.map[0]):
+            if isinstance(self.map[y][x + i], RoadVehicle):
+                i = (abs(i) - self.map[y][x + i].length) + (abs(i) - self.map[y][x + i].length) * self.map[y][
+                    x + i].speed
+                # distance + disctance*speed of next vehicle
                 break
-            i += 1
-        return i
+            if y == 0:
+                i -= 1
+            else:
+                i += 1
+        return abs(i)
 
-    def vehicle_acceleration(self):
-        pass
-        if self.speed < self.max_speed:
+    def vehicle_acceleration(self, distance_to_obstacle):
+
+        if self.speed < self.max_speed and self.speed + self.acceleration < distance_to_obstacle:
             self.speed = min(self.speed + self.acceleration, self.max_speed)
 
-    def vehicle_deacceleration(self, map: list):
-        distance_to_obstacle = min(self.look_ahead_moving_obstacle(map), self.look_ahead_static_obstacle(map))
+    def vehicle_deacceleration(self, distance_to_obstacle):
         if self.speed > distance_to_obstacle:
-            self.speed =  max(self.speed - self.acceleration, 0)
+            self.speed = max(self.speed - self.acceleration, 0)
 
+    def move_vehicle(self):
+        distance_to_obstacle = min(self.look_ahead_moving_obstacle(), self.look_ahead_static_obstacle())
+        self.vehicle_acceleration(distance_to_obstacle)
+        self.vehicle_deacceleration(distance_to_obstacle)
+
+        if isinstance(self, Car):
+            if self.will_turn is False:
+                self.change_lane()
+
+
+class Crossing:
+    """
+    obiekt - przejscie dla pieszych, ustawia sie w nim czy przejscie jest otwrte czy zamkanięte
+    (open == true -> auto moze jechac)
+    """
+
+    def __init__(self, position: (int, int), open: bool):
+        self.position = position
+        self.open = open
 
 
 class Car(RoadVehicle):
-    def __init__(self, position):
+    def __init__(self, position, will_turn=False):
         super().__init__(position)
         self.acceleration = 4
         self.width = 4
         self.length = 9
         self.can_turn = True
+        self.will_turn = will_turn
         self.max_speed = 28
+
+    def look_other_lane_ahead_and_behind(self, x: int, y: int) -> (int, int):
+
+        ahead = 0
+
+        while RoadVehicle.look_ahead_variable > ahead:
+            if isinstance(self.map[y][x + ahead], RoadVehicle):
+                ahead = (abs(ahead) - self.map[y][x + ahead].length) + (abs(ahead) - self.map[y][x + ahead].length) * \
+                        self.map[y][
+                            x + ahead].speed
+                break
+            if self.map[y][x + ahead] is None:
+                break
+            ahead += 1
+
+        behind = 0
+
+        while behind < RoadVehicle.look_ahead_variable:
+
+            if isinstance(self.map[y][x - behind], RoadVehicle):
+                behind = (abs(behind) - self.map[y][x - behind].length) + (
+                        abs(behind) - self.map[y][x - behind].length) * self.map[y][x - behind].speed
+                break
+            if self.map[y][x - behind] is None:
+                behind = RoadVehicle.look_ahead_variable
+                break
+
+            behind += 1
+
+        return behind, ahead
+
+    def crossing_incoming(self, x: int, y: int) -> int:
+        ahead = 0
+        while RoadVehicle.look_ahead_variable > ahead:
+            if self.map[y][x + ahead] is None:
+                break
+            ahead += 1
+        return ahead
+
+    def change_lane(self):
+
+        x, y = self.position
+
+        if y == 1:
+            # middle pas, sprawdzic czy nie trzeba juz zjedzac, czy nie zbliza sie wysepka
+            crossing_distance = self.crossing_incoming(x, y)  # zblizanie sie wysepki
+
+            if crossing_distance <= RoadVehicle.look_ahead_variable:
+                behind, ahead = self.look_other_lane_ahead_and_behind(x, y + 1)
+
+                if behind >= self.speed and self.speed <= ahead:
+                    self.position = (x, y + 1)
+
+            pass
+
+        if y == 2 and self.map[y - 1][x] is None:
+            #lewy pas, sprawdzenie czy mozna zjechac na srodek
+            behind, ahead = self.look_other_lane_ahead_and_behind(x, y - 1)
+
+            if behind >= self.speed and self.speed <= ahead:
+                self.position = (x, y - 1)
 
 
 class Bus(RoadVehicle):
@@ -133,7 +222,8 @@ class Bicycle:
 
 
 class PedestrianCrossing:
-    def __init__(self, width_range, up_spawn_range, down_spawn_range, type):
+    def __init__(self, width_range, up_spawn_range, down_spawn_range, type, spawn_prob):
+        self.spawn_prob = spawn_prob
         self.type = type
         self.width_range = width_range
         self.up_spawn_range = up_spawn_range

@@ -43,7 +43,8 @@ class Board:
                 crossing = Engine.PedestrianCrossing(width_range=(int(args[0]), int(args[1])),
                                                      up_spawn_range=(int(args[2]), int(args[3])),
                                                      down_spawn_range=(int(args[4]), int(args[5])),
-                                                     type=int(args[6]))
+                                                     type=int(args[6]),
+                                                     spawn_prob=int(args[7]))
                 self.pedestrian_areas.append(crossing)
 
 
@@ -134,11 +135,11 @@ class Board:
                         self.scrollbar_x = min(self.main_window_width - self.scrollbar_width, self.scrollbar_x)
                         self.scroll_x = - self.scrollbar_x * self.scrollbar_mult
 
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT] and self.scroll_x < 0:
-                self.scroll_x += self.scroll_vel
-            if keys[pygame.K_RIGHT] and self.scroll_x > -988:
-                self.scroll_x -= self.scroll_vel
+            # keys = pygame.key.get_pressed()
+            # if keys[pygame.K_LEFT] and self.scroll_x < 0:
+            #     self.scroll_x += self.scroll_vel
+            # if keys[pygame.K_RIGHT] and self.scroll_x > -988:
+            #     self.scroll_x -= self.scroll_vel
 
             self.main_screen.fill((0, 0, 0))
             for i in range(self.map_w + 1):
