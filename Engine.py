@@ -111,26 +111,27 @@ class Engine:
         crossing_open_duration = 40
         crossing_close_duration = 10
 
-        if self.crossing_closed is False and self.iter_counter % crossing_open_duration == 0:
+        if self.crossing_closed is False and self.iter_counter % (
+                crossing_close_duration + crossing_open_duration) == crossing_open_duration:
             self.crossing_closed = True
-            for i in range(self.map_w):
-                for j in range(self.map_h):
-                    if i < 300:
-                        if self.map[i][j] == 3:  # crossing
-                            self.map[i][j] = 6  # crossing_close
+            for i in range(229, 255):
+                for j in range(14, 34):
+                    if self.map[i][j] == 3:  # crossing
+                        self.map[i][j] = 6  # crossing_close
 
-        if self.crossing_closed is True and self.iter_counter % (
-                crossing_open_duration + crossing_close_duration) == crossing_open_duration:
+        if self.crossing_closed is True and self.iter_counter % (crossing_close_duration + crossing_open_duration) == 0:
             self.crossing_closed = False
-            for i in range(self.map_w):
-                for j in range(self.map_h):
-                    if i < 300:
-                        if self.map[i][j] == 6:  # crossing_close
-                            self.map[i][j] = 3  # crossing
+            for i in range(229, 255):
+                for j in range(14, 34):
+                    if self.map[i][j] == 6:  # crossing_close
+                        self.map[i][j] = 3  # crossing
+        # todo jak juz bedzie tablica ta 3x1400 dopisac aby tam przestawiał sie czynnik open w crossign
 
     def iteration(self):  # todo
         # self.spawn_cars()
         self.traffic_lights_crossing()
+
+        # 3x1400
         self.iter_counter += 1
 
     def move_cars(self):  # todo

@@ -1,6 +1,12 @@
 from abc import abstractmethod
 
 
+# czy kazdy obiekt klasy RoadVehicle bedzie miec dostep to tej mapy 3x1800?
+# jak pojazd bedzie zaznaczony w tej tablicy?
+
+# czy Iteration w enignsn bedzie mialo te dwie petele
+
+
 class RoadVehicle:
     # all in cell units
     acceleration = 0
@@ -15,47 +21,69 @@ class RoadVehicle:
     stops = False  # True if the vehicle stops at the bus stop
 
     @abstractmethod
-    def __init__(self, position):
+    def __init__(self, position: (int, int), map: list):  # pozacja w tabeli tej malej (3x1400), map (ta na 3x1400)
         self.position = position
         self.speed = 0
+        self.map = map
         self.preferred_lane = 'l'
 
-    def look_ahead_static_obstacle(self, map: list) -> int:
+    def look_ahead_static_obstacle(self) -> int:
         x, y = self.position
-        i = 1
+        i = 0
 
-        while i < RoadVehicle.look_ahead_variable:
-            # todo zalozenie, jak pieszy bedzie wchodzic na pasy bez swietal tez tam ustawic crossign_closed?
-            if map[x + i][y] == 6:
-                break
-            if map[x + i][y] == 5:
-                break
-
-            i += 1
+        while RoadVehicle.look_ahead_variable > i > 0 and i < len(self.map[0]):
+            if isinstance(self.map[y][x + i], Crossing):
+                if self.map[y][x + i].open is False:
+                    break
+            if y == 0:
+                i -= 1
+            else:
+                i += 1
 
         return i
 
-    def look_ahead_moving_obstacle(self, map: list) -> int:
-        #todo check speeed of obstacle before us and multiply i
+    def look_ahead_moving_obstacle(self) -> int:
         x, y = self.position
-        i = 1
+        i = 0
 
-        while i < RoadVehicle.look_ahead_variable:
-            if map[x + i][y] == 4:
+        while RoadVehicle.look_ahead_variable > i > 0 and i < len(self.map[0]):
+            if isinstance(self.map[y][x + i], RoadVehicle):
+                i += i * self.map[y][x + 1].speed
                 break
-            i += 1
+            if y == 0:
+                i -= 1
+            else:
+                i += 1
         return i
 
     def vehicle_acceleration(self):
-        pass
-        if self.speed < self.max_speed:
+        distance_to_obstacle = min(self.look_ahead_moving_obstacle(), self.look_ahead_static_obstacle())
+        if self.speed < self.max_speed and self.speed + self.acceleration < distance_to_obstacle:
             self.speed = min(self.speed + self.acceleration, self.max_speed)
 
-    def vehicle_deacceleration(self, map: list):
-        distance_to_obstacle = min(self.look_ahead_moving_obstacle(map), self.look_ahead_static_obstacle(map))
+    def vehicle_deacceleration(self):
+        distance_to_obstacle = min(self.look_ahead_moving_obstacle(), self.look_ahead_static_obstacle())
         if self.speed > distance_to_obstacle:
-            self.speed =  max(self.speed - self.acceleration, 0)
+            self.speed = max(self.speed - self.acceleration, 0)
 
+    def move_vehicle(self):
+        pass
+        self.vehicle_acceleration()
+        self.vehicle_deacceleration()
+
+        # if isinstance(self, Car):
+        #     self.turn cos cos
+
+
+class Crossing:
+    """
+    obiekt - przejscie dla pieszych, ustawia sie w nim czy przejscie jest otwrte czy zamkanięte
+    (open == true -> auto moze jechac)
+    """
+
+    def __init__(self, position: (int, int), open: bool):
+        self.position = position
+        self.open = open
 
 
 class Car(RoadVehicle):
