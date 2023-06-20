@@ -112,8 +112,12 @@ class Board:
 
 
     def main_loop(self):
-
+        clock = pygame.time.Clock()
+        iteration_interval = 1000  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
+        elapsed_time = 0
         while True:
+            delta_time = clock.tick(60)  # Maksymalna liczba klatek na sekundę (FPS) - można dostosować
+            elapsed_time += delta_time
 
             self.clock.tick(100)
             for event in pygame.event.get():
@@ -159,7 +163,9 @@ class Board:
 
             self.draw_pedastrians()
             pygame.display.flip()
-            self.engine.iteration()
+            if elapsed_time >= iteration_interval:
+                self.engine.iteration()
+                elapsed_time = 0
 
 
 if __name__ == '__main__':

@@ -46,6 +46,7 @@ class Engine:
         self.pedestrian_areas = pedestrian_arreas
         self.cars = [[0 for _ in range(3)] for i in range(self.map_w)]
         two_lanes = [(0, 263), (613, 657), (1168, 1215)]
+        crossings = [(230,255),(622,645),(1181,1202)] #wspolrzedne przejsc z map0
         for tup in two_lanes:
             for i in range(tup[0], tup[1]):
                 self.cars[i][1] = None
@@ -80,18 +81,18 @@ class Engine:
             car_scooter_prob = Fraction(10, 13)
             initial_pos = (669, 70)
             if rand_with_probability(car_scooter_prob):
-                veh = Car(initial_pos)
+                veh = Car(initial_pos,self.cars)
             else:
-                veh = Scooter(initial_pos)
+                veh = Scooter(initial_pos,self.cars)
             self.budryka_cars[1].append(veh)
         prob_kawiory_spawn = Fraction(1, 300)
         if rand_with_probability(prob_kawiory_spawn):
             car_scooter_prob = Fraction(2, 3)
             initial_pos = (751, 70)
             if rand_with_probability(car_scooter_prob):
-                veh = Car(initial_pos)
+                veh = Car(initial_pos,self.cars)
             else:
-                veh = Scooter(initial_pos)
+                veh = Scooter(initial_pos,self.cars)
             self.kawiory_cars[1].append(veh)
         # Kijowska
         phase = self.iter_counter % 60
@@ -99,19 +100,19 @@ class Engine:
         if 40 > phase >= 0 and not self.is_occupied(initial_pos[0], initial_pos[1]):
             prob_kijowska_spawn = Fraction(1, 15)
             if rand_with_probability(prob_kijowska_spawn):
-                self.add_car(Car(initial_pos))
+                self.add_car(Car(initial_pos,self.cars))
         elif phase == 40:
             cars_to_spawn = randint(7, 13)
             for i in range(cars_to_spawn):
                 rand = randint(1, 149)
                 if rand < 143:
-                    self.kijowska_to_spawn.put(Car(initial_pos))
+                    self.kijowska_to_spawn.put(Car(initial_pos,self.cars))
                 elif rand < 147:
-                    self.kijowska_to_spawn.put(BigBus(initial_pos))
+                    self.kijowska_to_spawn.put(BigBus(initial_pos,self.cars))
                 elif rand < 149:
-                    self.kijowska_to_spawn.put(Bus(initial_pos))
+                    self.kijowska_to_spawn.put(Bus(initial_pos,self.cars))
                 else:
-                    self.kijowska_to_spawn.put(Truck(initial_pos))
+                    self.kijowska_to_spawn.put(Truck(initial_pos,self.cars))
         elif not self.kijowska_to_spawn.empty() and not self.is_occupied(initial_pos[0], initial_pos[1]):
             self.add_car(self.kijowska_to_spawn.get())
         # Armii Krajowej
@@ -122,50 +123,50 @@ class Engine:
             for i in range(cars_to_spawn):
                 rand = randint(1, 153)
                 if rand < 133:
-                    self.ak_to_spawn.put(Car(initial_pos))
+                    self.ak_to_spawn.put(Car(initial_pos,self.cars))
                 elif rand < 141:
-                    self.ak_to_spawn.put(BigBus(initial_pos))
+                    self.ak_to_spawn.put(BigBus(initial_pos,self.cars))
                 elif rand < 147:
-                    self.ak_to_spawn.put(Bus(initial_pos))
+                    self.ak_to_spawn.put(Bus(initial_pos,self.cars))
                 elif rand < 153:
-                    self.ak_to_spawn.put(Scooter(initial_pos))
+                    self.ak_to_spawn.put(Scooter(initial_pos,self.cars))
                 else:
-                    self.ak_to_spawn.put(Truck(initial_pos))
+                    self.ak_to_spawn.put(Truck(initial_pos,self.cars))
         elif phase < 50:
             if not self.is_occupied(initial_pos[0], initial_pos[1]):
                 self.add_car(self.ak_to_spawn.get())
         elif not self.is_occupied(initial_pos[0], initial_pos[1]):
             prob_piastowska_spawn = Fraction(2, 35)
             if rand_with_probability(prob_piastowska_spawn):
-                self.add_car(Car(initial_pos))
+                self.add_car(Car(initial_pos,self.cars))
 
     def traffic_lights_crossing(self):
         # stale (ilosc iteracji po ktorych nastepuje zmiana)
         crossing_open_duration = 40
-        crossing_close_duration = 10
+        crossing_close_duration = 20
 
-        if self.crossing_closed is False and self.iter_counter % (
-                crossing_close_duration + crossing_open_duration) == crossing_open_duration:
+        if self.crossing_closed is False and \
+            self.iter_counter % (crossing_close_duration + crossing_open_duration) == 0:
             self.crossing_closed = True
             for i in range(229, 255):
                 for j in range(14, 34):
                     if self.map[i][j] == 3:  # crossing
                         self.map[i][j] = 6  # crossing_close
 
-        if self.crossing_closed is True and self.iter_counter % (crossing_close_duration + crossing_open_duration) == 0:
+        if self.crossing_closed is True and self.iter_counter % (
+                crossing_close_duration + crossing_open_duration) == crossing_open_duration:
             self.crossing_closed = False
             for i in range(229, 255):
                 for j in range(14, 34):
                     if self.map[i][j] == 6:  # crossing_close
                         self.map[i][j] = 3  # crossing
-        # todo jak juz bedzie tablica ta 3x1400 dopisac aby tam przestawiał sie czynnik open w crossign
+
 
     def iteration(self):  # todo
-        # self.spawn_cars()
+        self.spawn_cars()
         self.traffic_lights_crossing()
         self.spawn_pedestrians()
         self.move_pedestrians()
-        # 3x1400
         self.iter_counter += 1
 
 

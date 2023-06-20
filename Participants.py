@@ -3,6 +3,16 @@ from abc import abstractmethod
 from random import randint
 
 
+def map_pos_to_arr_ind(position: tuple):
+    if position[1] < 21:
+        return position[0], 0
+    if position[1] < 28:
+        return position[0], 1
+    if position[1] < 34:
+        return position[0], 2
+    return position[0], 3
+
+
 class RoadVehicle:
     # all in cell units
     acceleration = 0
@@ -24,14 +34,14 @@ class RoadVehicle:
         self.preferred_lane = 'l'
 
     def look_ahead_static_obstacle(self) -> int:
-        x, y = self.position
+        x, y = map_pos_to_arr_ind(self.position)
         i = 0
 
         while RoadVehicle.look_ahead_variable > i > 0 and i < len(self.map[0]):
-            if isinstance(self.map[y][x + i], Crossing):
-                if self.map[y][x + i].open is False:
+            if isinstance(self.map[x + i][y], Crossing): #tutaj zamienic na PedstrainCrossing
+                if self.map[x + i][y].open is False:
                     break
-            if self.map[y][x + 1] is None:
+            if self.map[x + i][y] is None:
                 break
 
             if y == 0:
@@ -42,13 +52,13 @@ class RoadVehicle:
         return abs(i)
 
     def look_ahead_moving_obstacle(self) -> int:
-        x, y = self.position
+        x, y = map_pos_to_arr_ind(self.position)
         i = 0
 
         while RoadVehicle.look_ahead_variable > i > 0 and i < len(self.map[0]):
-            if isinstance(self.map[y][x + i], RoadVehicle):
-                i = (abs(i) - self.map[y][x + i].length) + (abs(i) - self.map[y][x + i].length) * self.map[y][
-                    x + i].speed
+            if isinstance(self.map[x + i][y], RoadVehicle):
+                i = (abs(i) - self.map[x + i][y].length) + (abs(i) - self.map[x + i][y].length) * self.map[x + i][
+                    y].speed
                 # distance + disctance*speed of next vehicle
                 break
             if y == 0:
@@ -80,6 +90,8 @@ class Crossing:
     """
     obiekt - przejscie dla pieszych, ustawia sie w nim czy przejscie jest otwrte czy zamkanięte
     (open == true -> auto moze jechac)
+
+    Prawdopodobnie zamienic na obiekty klasy PedastrainCrossing
     """
 
     def __init__(self, position: (int, int), open: bool):
@@ -88,8 +100,8 @@ class Crossing:
 
 
 class Car(RoadVehicle):
-    def __init__(self, position, will_turn=False):
-        super().__init__(position)
+    def __init__(self, position,map, will_turn=False):
+        super().__init__(position,map)
         self.acceleration = 4
         self.width = 4
         self.length = 9
@@ -102,12 +114,11 @@ class Car(RoadVehicle):
         ahead = 0
 
         while RoadVehicle.look_ahead_variable > ahead:
-            if isinstance(self.map[y][x + ahead], RoadVehicle):
-                ahead = (abs(ahead) - self.map[y][x + ahead].length) + (abs(ahead) - self.map[y][x + ahead].length) * \
-                        self.map[y][
-                            x + ahead].speed
+            if isinstance(self.map[x + ahead][y], RoadVehicle):
+                ahead = (abs(ahead) - self.map[x + ahead][y].length) + (abs(ahead) - self.map[x + ahead][y].length) * \
+                        self.map[x + ahead][y].speed
                 break
-            if self.map[y][x + ahead] is None:
+            if self.map[x + ahead][y] is None:
                 break
             ahead += 1
 
@@ -115,11 +126,11 @@ class Car(RoadVehicle):
 
         while behind < RoadVehicle.look_ahead_variable:
 
-            if isinstance(self.map[y][x - behind], RoadVehicle):
-                behind = (abs(behind) - self.map[y][x - behind].length) + (
-                        abs(behind) - self.map[y][x - behind].length) * self.map[y][x - behind].speed
+            if isinstance(self.map[x - behind][y], RoadVehicle):
+                behind = (abs(behind) - self.map[x - behind][y].length) + (
+                        abs(behind) - self.map[x - behind][y].length) * self.map[x - behind][y].speed
                 break
-            if self.map[y][x - behind] is None:
+            if self.map[x - behind][y] is None:
                 behind = RoadVehicle.look_ahead_variable
                 break
 
@@ -130,14 +141,14 @@ class Car(RoadVehicle):
     def crossing_incoming(self, x: int, y: int) -> int:
         ahead = 0
         while RoadVehicle.look_ahead_variable > ahead:
-            if self.map[y][x + ahead] is None:
+            if self.map[x + ahead][y] is None:
                 break
             ahead += 1
         return ahead
 
     def change_lane(self):
 
-        x, y = self.position
+        x, y = map_pos_to_arr_ind(self.position)
 
         if y == 1:
             # middle pas, sprawdzic czy nie trzeba juz zjedzac, czy nie zbliza sie wysepka
@@ -148,20 +159,24 @@ class Car(RoadVehicle):
 
                 if behind >= self.speed and self.speed <= ahead:
                     self.position = (x, y + 1)
+                    # changing lane
+                    # todo zmienic jego pozycjie w tablicy
 
             pass
 
         if y == 2 and self.map[y - 1][x] is None:
-            #lewy pas, sprawdzenie czy mozna zjechac na srodek
+            # lewy pas, sprawdzenie czy mozna zjechac na srodek
             behind, ahead = self.look_other_lane_ahead_and_behind(x, y - 1)
 
             if behind >= self.speed and self.speed <= ahead:
                 self.position = (x, y - 1)
+                # changing lane
+                # todo zmienic jego pozycjie w tablicy
 
 
 class Bus(RoadVehicle):
-    def __init__(self, position):
-        super().__init__(position)
+    def __init__(self, position, map):
+        super().__init__(position, map)
         self.acceleration = 3
         self.width = 5
         self.length = 24
@@ -171,8 +186,8 @@ class Bus(RoadVehicle):
 
 
 class BigBus(RoadVehicle):
-    def __init__(self, position):
-        super().__init__(position)
+    def __init__(self, position, map):
+        super().__init__(position, map)
         self.acceleration = 3
         self.width = 5
         self.length = 36
@@ -182,8 +197,8 @@ class BigBus(RoadVehicle):
 
 
 class Truck(RoadVehicle):
-    def __init__(self, position):
-        super().__init__(position)
+    def __init__(self, position, map):
+        super().__init__(position, map)
         self.acceleration = 2
         self.width = 6
         self.length = 22
@@ -191,8 +206,8 @@ class Truck(RoadVehicle):
 
 
 class Scooter(RoadVehicle):
-    def __init__(self, position):
-        super().__init__(position)
+    def __init__(self, position, map):
+        super().__init__(position, map)
         self.acceleration = 3
         self.width = 2
         self.length = 4
@@ -220,7 +235,6 @@ class Bicycle:
         self.position = position
 
 
-
 class PedestrianCrossing:
     def __init__(self, width_range, up_spawn_range, down_spawn_range, type, spawn_prob):
         self.spawn_prob = spawn_prob
@@ -229,28 +243,28 @@ class PedestrianCrossing:
         self.up_spawn_range = up_spawn_range
         self.down_spawn_range = down_spawn_range
         self.total_width = width_range[1] - width_range[0] + 1
-        self.total_height = down_spawn_range[1] - up_spawn_range[0] +1
+        self.total_height = down_spawn_range[1] - up_spawn_range[0] + 1
         self.map = []
         for i in range(self.total_width):
             self.map.append([])
             for j in range(self.total_height):
                 self.map[i].append(None)
+
     def spawn_pedestrian_up(self):
-        #todo count amount of pedestrians to avoid situation with overfilling
+        # todo count amount of pedestrians to avoid situation with overfilling
         x = randint(0, self.total_width - 1)
         y = randint(self.up_spawn_range[0], self.up_spawn_range[1]) - self.up_spawn_range[0]
         while self.map[x][y] is not None:
-            x = randint(0, self.total_width-1)
+            x = randint(0, self.total_width - 1)
             y = randint(self.up_spawn_range[0], self.up_spawn_range[1]) - self.up_spawn_range[0]
-        self.map[x][y] = Pedestrian((x,y), -1)
-
+        self.map[x][y] = Pedestrian((x, y), -1)
 
     def spawn_pedestrian_down(self):
         # todo count amount of pedestrians to avoid situation with overfilling
-        x = randint(0, self.total_width-1)
+        x = randint(0, self.total_width - 1)
         y = randint(self.down_spawn_range[0], self.down_spawn_range[1]) - self.up_spawn_range[0]
         while self.map[x][y] is not None:
-            x = randint(0, self.total_width-1)
+            x = randint(0, self.total_width - 1)
             y = randint(self.down_spawn_range[0], self.down_spawn_range[1]) - self.up_spawn_range[0]
         self.map[x][y] = Pedestrian((x, y), 1)
 
@@ -271,13 +285,10 @@ class PedestrianCrossing:
         for i in range(self.total_width):
             for j in range(self.total_height):
                 if self.map[i][j] is not None:
-                    self.map[i][j].speed = min(Pedestrian.max_speed, self.map[i][j].speed+1)
+                    self.map[i][j].speed = min(Pedestrian.max_speed, self.map[i][j].speed + 1)
                     # if randint(0, 10) <= 3:
                     #     self.map[i][j].speed = max(Pedestrian.max_speed, self.map[i][j].speed + 1)
+
     def iterate(self):
         self.update_speed()
         self.move()
-
-
-
-
