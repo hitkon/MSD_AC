@@ -102,7 +102,7 @@ class Board:
         for area in self.pedestrian_areas:
             for i in range(area.total_width):
                 for j in range(area.total_height):
-                    if area.map[i][j] is not None:
+                    if len(area.map[i][j]) != 0:
                         pygame.draw.rect(
                             self.main_screen, self.colors[5],
                             pygame.Rect((i + area.width_range[0] + self.scroll_x) * self.cell_size,

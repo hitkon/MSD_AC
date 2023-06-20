@@ -248,44 +248,46 @@ class PedestrianCrossing:
         for i in range(self.total_width):
             self.map.append([])
             for j in range(self.total_height):
-                self.map[i].append(None)
+                self.map[i].append([])
 
     def spawn_pedestrian_up(self):
         # todo count amount of pedestrians to avoid situation with overfilling
         x = randint(0, self.total_width - 1)
         y = randint(self.up_spawn_range[0], self.up_spawn_range[1]) - self.up_spawn_range[0]
-        while self.map[x][y] is not None:
+        while len(self.map[x][y]) != 0:
             x = randint(0, self.total_width - 1)
             y = randint(self.up_spawn_range[0], self.up_spawn_range[1]) - self.up_spawn_range[0]
-        self.map[x][y] = Pedestrian((x, y), -1)
+        self.map[x][y].append(Pedestrian((x, y), -1))
 
     def spawn_pedestrian_down(self):
         # todo count amount of pedestrians to avoid situation with overfilling
         x = randint(0, self.total_width - 1)
         y = randint(self.down_spawn_range[0], self.down_spawn_range[1]) - self.up_spawn_range[0]
-        while self.map[x][y] is not None:
+        while len(self.map[x][y]) != 0:
             x = randint(0, self.total_width - 1)
             y = randint(self.down_spawn_range[0], self.down_spawn_range[1]) - self.up_spawn_range[0]
-        self.map[x][y] = Pedestrian((x, y), 1)
+        self.map[x][y].append(Pedestrian((x, y), 1))
 
     def move(self):
         map_copy = copy.deepcopy(self.map)
-        self.map = [[None for _ in range(self.total_height)] for _ in range(self.total_width)]
+        self.map = [[ [] for _ in range(self.total_height)] for _ in range(self.total_width)]
         for i in range(self.total_width):
             for j in range(self.total_height):
-                if map_copy[i][j] is not None:
-                    # self.map[i][j] = None
-                    if (map_copy[i][j].direction == -1 and j >= self.down_spawn_range[0] - self.up_spawn_range[0] - 1) \
-                            or (map_copy[i][j].direction == 1 and j <= self.up_spawn_range[1] - self.up_spawn_range[0]):
-                        continue
-                    self.map[i][j - (map_copy[i][j].direction * map_copy[i][j].speed)] = (map_copy[i][j])
-                    # self.map[i][j - map_copy[i][j]].position = (i, j - map_copy[i][j])
+                if len(map_copy[i][j]) != 0:
+                    for elem in map_copy[i][j]:
+                        # self.map[i][j] = None
+                        if (elem.direction == -1 and j >= self.down_spawn_range[0] - self.up_spawn_range[0] - 1) \
+                                or (elem.direction == 1 and j <= self.up_spawn_range[1] - self.up_spawn_range[0]):
+                            continue
+                        self.map[i][j - (elem.direction * elem.speed)].append(elem)
+                        # self.map[i][j - map_copy[i][j]].position = (i, j - map_copy[i][j])
 
     def update_speed(self):
         for i in range(self.total_width):
             for j in range(self.total_height):
-                if self.map[i][j] is not None:
-                    self.map[i][j].speed = min(Pedestrian.max_speed, self.map[i][j].speed + 1)
+                if len(self.map[i][j]) != 0:
+                    for elem in self.map[i][j]:
+                        elem.speed = min(Pedestrian.max_speed, elem.speed + 1)
                     # if randint(0, 10) <= 3:
                     #     self.map[i][j].speed = max(Pedestrian.max_speed, self.map[i][j].speed + 1)
 
