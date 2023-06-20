@@ -20,7 +20,7 @@ class RoadVehicle:
     length = 0
     max_speed = 28  # 50km/h = 14m/s
 
-    look_ahead_variable = 28
+    look_ahead_variable = 30
 
     preferred_lane = 'l'  # 'l' for left, 'r' for right
     can_turn = False  # True if the vehicle can turn on the crossings
@@ -38,7 +38,7 @@ class RoadVehicle:
         i = 0
 
         while RoadVehicle.look_ahead_variable > i > 0 and i < len(self.map[0]):
-            if isinstance(self.map[x + i][y], Crossing): #tutaj zamienic na PedstrainCrossing
+            if isinstance(self.map[x + i][y], Crossing):  # tutaj zamienic na PedstrainCrossing
                 if self.map[x + i][y].open is False:
                     break
             if self.map[x + i][y] is None:
@@ -100,8 +100,8 @@ class Crossing:
 
 
 class Car(RoadVehicle):
-    def __init__(self, position,map, will_turn=False):
-        super().__init__(position,map)
+    def __init__(self, position, map, will_turn=False):
+        super().__init__(position, map)
         self.acceleration = 4
         self.width = 4
         self.length = 9
@@ -115,8 +115,7 @@ class Car(RoadVehicle):
 
         while RoadVehicle.look_ahead_variable > ahead:
             if isinstance(self.map[x + ahead][y], RoadVehicle):
-                ahead = (abs(ahead) - self.map[x + ahead][y].length) + (abs(ahead) - self.map[x + ahead][y].length) * \
-                        self.map[x + ahead][y].speed
+                ahead = (abs(ahead) - self.map[x + ahead][y].length) * self.map[x + ahead][y].speed
                 break
             if self.map[x + ahead][y] is None:
                 break
@@ -127,8 +126,7 @@ class Car(RoadVehicle):
         while behind < RoadVehicle.look_ahead_variable:
 
             if isinstance(self.map[x - behind][y], RoadVehicle):
-                behind = (abs(behind) - self.map[x - behind][y].length) + (
-                        abs(behind) - self.map[x - behind][y].length) * self.map[x - behind][y].speed
+                behind = (abs(behind) - self.length) * self.map[x - behind][y].speed
                 break
             if self.map[x - behind][y] is None:
                 behind = RoadVehicle.look_ahead_variable
@@ -138,40 +136,41 @@ class Car(RoadVehicle):
 
         return behind, ahead
 
-    def crossing_incoming(self, x: int, y: int) -> int:
-        ahead = 0
-        while RoadVehicle.look_ahead_variable > ahead:
-            if self.map[x + ahead][y] is None:
-                break
-            ahead += 1
-        return ahead
 
-    def change_lane(self):
+def crossing_incoming(self, x: int, y: int) -> int:
+    ahead = 0
+    while RoadVehicle.look_ahead_variable > ahead:
+        if self.map[x + ahead][y] is None:
+            break
+        ahead += 1
+    return ahead
 
-        x, y = map_pos_to_arr_ind(self.position)
 
-        if y == 1:
-            # middle pas, sprawdzic czy nie trzeba juz zjedzac, czy nie zbliza sie wysepka
-            crossing_distance = self.crossing_incoming(x, y)  # zblizanie sie wysepki
+def change_lane(self):
+    x, y = map_pos_to_arr_ind(self.position)
 
-            if crossing_distance <= RoadVehicle.look_ahead_variable:
-                behind, ahead = self.look_other_lane_ahead_and_behind(x, y + 1)
+    if y == 1:
+        # middle pas, sprawdzic czy nie trzeba juz zjedzac, czy nie zbliza sie wysepka
+        crossing_distance = self.crossing_incoming(x, y)  # zblizanie sie wysepki
 
-                if behind >= self.speed and self.speed <= ahead:
-                    self.position = (x, y + 1)
-                    # changing lane
-                    # todo zmienic jego pozycjie w tablicy
+        if crossing_distance <= RoadVehicle.look_ahead_variable:
+            behind, ahead = self.look_other_lane_ahead_and_behind(x, y + 1)
 
-            pass
-
-        if y == 2 and self.map[y - 1][x] is None:
-            # lewy pas, sprawdzenie czy mozna zjechac na srodek
-            behind, ahead = self.look_other_lane_ahead_and_behind(x, y - 1)
-
-            if behind >= self.speed and self.speed <= ahead:
-                self.position = (x, y - 1)
+            if behind <= self.speed and self.speed <= ahead:
+                self.position = (x, y + 1)
                 # changing lane
                 # todo zmienic jego pozycjie w tablicy
+
+        pass
+
+    if y == 2 and self.map[y - 1][x] is None:
+        # lewy pas, sprawdzenie czy mozna zjechac na srodek
+        behind, ahead = self.look_other_lane_ahead_and_behind(x, y - 1)
+
+        if behind >= self.speed and self.speed <= ahead:
+            self.position = (x, y - 1)
+            # changing lane
+            # todo zmienic jego pozycjie w tablicy
 
 
 class Bus(RoadVehicle):
@@ -185,7 +184,7 @@ class Bus(RoadVehicle):
         self.max_speed = 24
 
 
-class BigBus(RoadVehicle):
+class BigBus(RoadVehicle):  # coach in documentation
     def __init__(self, position, map):
         super().__init__(position, map)
         self.acceleration = 3
@@ -270,7 +269,7 @@ class PedestrianCrossing:
 
     def move(self):
         map_copy = copy.deepcopy(self.map)
-        self.map = [[ [] for _ in range(self.total_height)] for _ in range(self.total_width)]
+        self.map = [[[] for _ in range(self.total_height)] for _ in range(self.total_width)]
         for i in range(self.total_width):
             for j in range(self.total_height):
                 if len(map_copy[i][j]) != 0:
