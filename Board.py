@@ -132,14 +132,15 @@ class Board:
                                                  drawing_range[0]*self.cell_size, drawing_range[1]*self.cell_size))
 
     def main_loop(self):
-        clock = pygame.time.Clock()
-        iteration_interval = 1000  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
-        elapsed_time = 0
+        # clock = pygame.time.Clock()
+        # iteration_interval = 1000  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
+        # elapsed_time = 0
         while True:
-            delta_time = clock.tick(60)  # Maksymalna liczba klatek na sekundę (FPS) - można dostosować
-            elapsed_time += delta_time
+            # delta_time = self.clock.tick()  # Maksymalna liczba klatek na sekundę (FPS) - można dostosować
+            # elapsed_time += delta_time
 
-            self.clock.tick(100)
+            # self.clock.tick(100)
+            pygame.time.wait(500)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -181,12 +182,12 @@ class Board:
                 pygame.Rect(self.scrollbar_x, self.main_window_height - self.scrollbar_height, self.scrollbar_width, self.scrollbar_height)
             )
 
+            # if elapsed_time >= iteration_interval:
+            self.engine.iteration()
+            # elapsed_time = 0
             self.draw_pedestrians()
             self.draw_cars()
             pygame.display.flip()
-            if elapsed_time >= iteration_interval:
-                self.engine.iteration()
-                elapsed_time = 0
 
 
 if __name__ == '__main__':
