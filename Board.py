@@ -128,7 +128,8 @@ class Board:
                         x_be = x_be - drawing_range[0]
                         y_be = y_be - drawing_range[1]
                     pygame.draw.rect(self.main_screen, self.colors[4],
-                                     pygame.Rect(x_be, y_be, drawing_range[0], drawing_range[1]))
+                                     pygame.Rect((x_be + self.scroll_x)*self.cell_size, y_be*self.cell_size,
+                                                 drawing_range[0]*self.cell_size, drawing_range[1]*self.cell_size))
 
     def main_loop(self):
         clock = pygame.time.Clock()
