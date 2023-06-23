@@ -164,7 +164,8 @@ class Engine:
                 new_x = x - self.cars[x][0].speed
                 if new_x >= 0:
                     self.move_car(x, 0, new_x, 0)
-                self.cars[x][0] = 0
+                else:
+                    self.cars[x][0] = 0
             if is_vehicle(cars_copy[x][1]):
                 new_x = x + self.cars[x][1].speed
                 if new_x < self.map_w:

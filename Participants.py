@@ -74,49 +74,50 @@ class RoadVehicle:
                 if is_vehicle(self.map[x-i][y]):
                     return i - self.map[x-i][y].length
         else:
-            be = 1
+            for i in range(1, self.speed + self.acceleration + 1 + max_veh_len):
+                if x+i >= len(self.map):
+                    return self.speed + self.acceleration + 1 + max_veh_len
+                if is_vehicle(self.map[x+i][y]):
+                    return i - self.map[x+i][y].length
             if self.will_switch:
-                be = -Car.max_speed
                 if y == 1:
                     y += 1
                 else:
                     y -= 1
-                self.will_switch = False
-            for i in range(be, self.speed + self.acceleration + 1 + max_veh_len):
-                if x+i >= len(self.map):
-                    return self.speed + self.acceleration + 1 + max_veh_len
-                if x+i >= 0 and is_vehicle(self.map[x+i][y]):
-                    return i - self.map[x+i][y].length
+                for i in range(0, -Car.max_speed, -1):
+                    if x+i >= 0 and self.map[x+i][y] is None:
+                        break
+                    if x+i >= 0 and is_vehicle(self.map[x+i][y]):
+                        return i - self.map[x+i][y].length
+                for i in range(1, self.speed + self.acceleration + 1 + max_veh_len):
+                    if x+i >= len(self.map):
+                        return self.speed + self.acceleration + 1 + max_veh_len
+                    if x+i >= 0 and is_vehicle(self.map[x+i][y]):
+                        return i - self.map[x+i][y].length
         return self.speed + self.acceleration + 1 + max_veh_len
 
     def update_will_switch(self):
+        self.will_switch = False
         if self.preferred_lane == 'r':
-            self.will_switch = False
             return
         x, y = map_pos_to_arr_ind(self.position)
         if y == 0:
-            self.will_switch = False
             return
         if y == 1:
             for i in range(1, self.speed + self.acceleration + 1):
                 if x + i >= len(self.map):
-                    self.will_switch = False
                     return
                 if self.map[x+i][y] is None:
                     self.will_switch = True
                     return
-            self.will_switch = False
             return
         if y == 2:
             for i in range(1, self.speed + self.acceleration + 1):
                 if x + i > len(self.map):
-                    self.will_switch = False
                     return
                 if self.map[x+i][y] is not None:
                     self.will_switch = True
                     return
-            self.will_switch = False
-            return
 
     def accelerate(self, distance_to_obstacle):
         if self.speed < self.max_speed and self.speed + self.acceleration < distance_to_obstacle:
@@ -141,6 +142,8 @@ class RoadVehicle:
         dist = min(self.distance_to_moving_obstacle(), self.distance_to_static_obstacle())
         self.accelerate(dist)
         self.brake(dist)
+        if self.speed == 0 and 100 < self.position[0] < 1300:
+            a = 3
         # print("distance to obstacle:", dist, "\nSpeed:", self.speed)
 
 

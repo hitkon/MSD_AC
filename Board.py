@@ -132,18 +132,11 @@ class Board:
                                                  drawing_range[0]*self.cell_size, drawing_range[1]*self.cell_size))
 
     def main_loop(self):
-        # clock = pygame.time.Clock()
-        iteration_interval = 1000  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
+        iteration_interval = 1000  # Time between iterations in ms, change to 10 (or any low number) for debug purpose
         elapsed_time = 0
-        # counter = 0
         while True:
-            delta_time = self.clock.tick()  # Maksymalna liczba klatek na sekundę (FPS) - można dostosować
+            delta_time = self.clock.tick()
             elapsed_time += delta_time
-
-            # self.clock.tick(100)
-            # pygame.time.wait(1000)
-            # sleep(1)
-            # print("Drawing", counter, "begin")
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -167,7 +160,7 @@ class Board:
             # if keys[pygame.K_LEFT] and self.scroll_x < 0:
             #     self.scroll_x += self.scroll_vel
             # if keys[pygame.K_RIGHT] and self.scroll_x > -988:
-            #     self.scroll_x -= self.scroll_vel
+            #     self.scroll_x -= self.scroll_vel              # arrows movement
 
             self.main_screen.fill((0, 0, 0))
             for i in range(self.map_w + 1):
@@ -191,8 +184,6 @@ class Board:
                 self.draw_pedestrians()
                 self.draw_cars()
                 pygame.display.flip()
-            # print("Drawing", counter, "end")
-            # counter += 1
 
 
 if __name__ == '__main__':
