@@ -14,9 +14,8 @@ def rand_with_probability(prob: Fraction):
 class Engine:
     # todo real values
     # probability of turn
-    prob_budryka = Fraction(1, 10)
-    prob_kawiory = Fraction(1, 10)
-    prob_kijowska = Fraction(1, 3)
+    turn_prob_right = Fraction(3, 156)
+    turn_prob_left = Fraction(2, 142)
 
     crossing_open_duration = 40
     crossing_close_duration = 19
@@ -60,24 +59,28 @@ class Engine:
 
     def spawn_cars(self):
         # Budryka & Kawiory
-        # prob_budryka_spawn = Fraction(14, 1000)
-        # if rand_with_probability(prob_budryka_spawn):
-        #     car_scooter_prob = Fraction(10, 13)
-        #     initial_pos = (669, 70)
-        #     if rand_with_probability(car_scooter_prob):
-        #         veh = Car(initial_pos, self.cars)
-        #     else:
-        #         veh = Scooter(initial_pos, self.cars)
-        #     self.budryka_cars[1].append(veh)
-        # prob_kawiory_spawn = Fraction(1, 300)
-        # if rand_with_probability(prob_kawiory_spawn):
-        #     car_scooter_prob = Fraction(2, 3)
-        #     initial_pos = (751, 70)
-        #     if rand_with_probability(car_scooter_prob):
-        #         veh = Car(initial_pos, self.cars)
-        #     else:
-        #         veh = Scooter(initial_pos, self.cars)
-        #     self.kawiory_cars[1].append(veh)
+        prob_budryka_spawn = Fraction(14, 1000)
+        if rand_with_probability(prob_budryka_spawn):
+            car_scooter_prob = Fraction(10, 13)
+            initial_pos = (672, 35 + 10*len(self.budryka_cars[1]))
+            if rand_with_probability(car_scooter_prob):
+                veh = Car(initial_pos, self.cars)
+            else:
+                veh = Scooter(initial_pos, self.cars)
+            if rand_with_probability(Fraction(1, 2)):
+                veh.will_turn = True
+            self.budryka_cars[1].append(veh)
+        prob_kawiory_spawn = Fraction(1, 300)
+        if rand_with_probability(prob_kawiory_spawn):
+            car_scooter_prob = Fraction(2, 3)
+            initial_pos = (754, 35 + 10*len(self.kawiory_cars[1]))
+            if rand_with_probability(car_scooter_prob):
+                veh = Car(initial_pos, self.cars)
+            else:
+                veh = Scooter(initial_pos, self.cars)
+            if rand_with_probability(Fraction(1, 2)):
+                veh.will_turn = True
+            self.kawiory_cars[1].append(veh)
         # Kijowska
         phase = self.iter_counter % 60
         initial_pos = (self.map_w-1, 15)
@@ -98,7 +101,11 @@ class Engine:
                 else:
                     self.kijowska_to_spawn.put(Truck(initial_pos, self.cars))
         elif not self.kijowska_to_spawn.empty() and not self.is_occupied(initial_pos[0], initial_pos[1]):
-            self.add_car(self.kijowska_to_spawn.get())
+            car = self.kijowska_to_spawn.get()
+            if isinstance(car, Car) or isinstance(car, Scooter):
+                if rand_with_probability(self.turn_prob_left):
+                    car.will_turn = True
+            self.add_car(car)
         # Armii Krajowej
         initial_pos = (0, 33)
         phase = self.iter_counter % 120
@@ -118,7 +125,11 @@ class Engine:
                     self.ak_to_spawn.put(Truck(initial_pos, self.cars))
         elif phase < 50:
             if not self.is_occupied(initial_pos[0], initial_pos[1]) and not self.ak_to_spawn.empty():
-                self.add_car(self.ak_to_spawn.get())
+                car = self.ak_to_spawn.get()
+                if isinstance(car, Car) or isinstance(car, Scooter):
+                    if rand_with_probability(self.turn_prob_right):
+                        car.will_turn = True
+                self.add_car(car)
         elif not self.is_occupied(initial_pos[0], initial_pos[1]):
             prob_piastowska_spawn = Fraction(2, 35)
             if rand_with_probability(prob_piastowska_spawn):
@@ -184,12 +195,71 @@ class Engine:
                         self.move_car(x, 2, new_x, 2)
                 else:
                     self.cars[x][2] = 0
+        if len(self.budryka_cars[1]) > 0:
+            self.move_cars_from_list(self.budryka_cars[1], True)
+        if len(self.kawiory_cars[1]) > 0:
+            self.move_cars_from_list(self.kawiory_cars[1], True)
+        self.move_cars_from_list(self.budryka_cars[0], False)
+        self.move_cars_from_list(self.kawiory_cars[0], False)
+
+    def move_cars_from_list(self, cars_list: list, upwards: bool):
+        if not upwards:
+            i = len(cars_list) - 1
+            while i >= 0:
+                car = cars_list[i]
+                car.position = (car.position[0], car.position[1] + 10)
+                if car.position[1] > 70:
+                    cars_list.pop(i)
+                i -= 1
+            return
+        car = cars_list[0]
+        if car.position[1] > 34:
+            car.position = (car.position[0], 34)
+            return
+        can_turn_right = True
+        if self.is_occupied(car.position[0]+1, 27) or self.is_occupied(car.position[0]+1, 33):
+            return
+        for i in range(0, 3*max_veh_speed):
+            if is_vehicle(self.cars[car.position[0] - i][2]) or is_vehicle(self.cars[car.position[0] - i][1]):
+                can_turn_right = False
+                break
+        if not can_turn_right:
+            return
+        if not car.will_turn:
+            self.move_car(car.position[0], 3, car.position[0] + 1, 1)
+            car.speed = car.acceleration
+            for car in cars_list:
+                car.position = (car.position[0], car.position[1] - 10)
+            return
+        can_turn_left = True
+        if self.is_occupied(car.position[0]-1, 15):
+            return
+        for i in range(0, 3*max_veh_speed):
+            if is_vehicle(self.cars[car.position[0] + i][0]):
+                can_turn_left = False
+                break
+        if can_turn_left:
+            car.will_turn = False
+            self.move_car(car.position[0], 3, car.position[0] - 1, 0)
+            car.speed = car.acceleration
+            for car in cars_list:
+                car.position = (car.position[0], car.position[1] - 10)
 
     def move_car(self, x_from, y_from, x_to, y_to):
         if x_to == x_from and y_from == y_to:
             return
         if is_vehicle(self.cars[x_to][y_to]):
             raise Exception("2 cars cannot be on one field")
+        if y_from == 3:
+            if x_from < 700:
+                self.cars[x_to][y_to] = self.budryka_cars[1].pop(0)
+            else:
+                self.cars[x_to][y_to] = self.kawiory_cars[1].pop(0)
+            y_pos = 27
+            if y_to == 0:
+                y_pos = 15
+            self.cars[x_to][y_to].position = (x_to, y_pos)
+            return
         if y_to == y_from:
             self.cars[x_from][y_from].position = (x_to, self.cars[x_from][y_to].position[1])
         elif y_to == 2:
@@ -200,6 +270,7 @@ class Engine:
             self.cars[x_from][y_from].position = (x_to, 15)
         else:
             print("Unknown position")
+
         self.cars[x_to][y_to] = self.cars[x_from][y_from]
         self.cars[x_from][y_from] = 0
 

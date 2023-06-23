@@ -131,8 +131,20 @@ class Board:
                                      pygame.Rect((x_be + self.scroll_x)*self.cell_size, y_be*self.cell_size,
                                                  drawing_range[0]*self.cell_size, drawing_range[1]*self.cell_size))
 
+        def draw_cars_from_list(cars: list):
+            for car in cars:
+                x_be, y_be = car.position
+                drawing_range = (car.width, car.length)
+                x_be -= drawing_range[0]
+                pygame.draw.rect(self.main_screen, self.colors[4],
+                                 pygame.Rect((x_be + self.scroll_x) * self.cell_size, y_be * self.cell_size,
+                                             drawing_range[0] * self.cell_size, drawing_range[1] * self.cell_size))
+
+        draw_cars_from_list(self.engine.budryka_cars[1])
+        draw_cars_from_list(self.engine.kawiory_cars[1])
+
     def main_loop(self):
-        iteration_interval = 1000  # Time between iterations in ms, change to 10 (or any low number) for debug purpose
+        iteration_interval = 10  # Time between iterations in ms, change to 10 (or any low number) for debug purpose
         elapsed_time = 0
         while True:
             delta_time = self.clock.tick()
@@ -177,13 +189,13 @@ class Board:
                 self.main_screen, (0, 0, 0),
                 pygame.Rect(self.scrollbar_x, self.main_window_height - self.scrollbar_height, self.scrollbar_width, self.scrollbar_height)
             )
-
+            self.draw_pedestrians()
+            self.draw_cars()
             if elapsed_time >= iteration_interval:
                 self.engine.iteration()
                 elapsed_time = 0
-                self.draw_pedestrians()
-                self.draw_cars()
-                pygame.display.flip()
+            pygame.display.flip()
+
 
 
 if __name__ == '__main__':
