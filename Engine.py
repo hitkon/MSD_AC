@@ -174,8 +174,7 @@ class Engine:
         pass
 
     def spawn_pedestrians(self):
-        # if not self.crossing_closed:
-        #     return
+
         for area in self.pedestrian_areas:
             if area.type == 1 and not self.crossing_closed:
                 continue
@@ -187,8 +186,7 @@ class Engine:
 
 
     def move_pedestrians(self):
-        # if self.crossing_closed:
-        #     return
+
         for area in self.pedestrian_areas:
             if area.type == 1 and self.crossing_closed:
                 continue

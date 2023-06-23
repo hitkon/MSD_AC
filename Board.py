@@ -113,7 +113,7 @@ class Board:
 
     def main_loop(self):
         clock = pygame.time.Clock()
-        iteration_interval = 1000  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
+        iteration_interval = 500  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
         elapsed_time = 0
         while True:
             delta_time = clock.tick(60)  # Maksymalna liczba klatek na sekundę (FPS) - można dostosować
