@@ -4,6 +4,15 @@ import pygame
 import sys
 import Engine
 
+
+# def sign(x: int) -> int:
+#     if x < 0:
+#         return -1
+#     elif x == 0:
+#         return 0
+#     return 1
+
+
 class Board:
     def __init__(self):
         self.pedestrian_areas = []
@@ -46,8 +55,6 @@ class Board:
                                                      type=int(args[6]),
                                                      spawn_prob=int(args[7]))
                 self.pedestrian_areas.append(crossing)
-
-
 
     def init_map(self):
         with open("map/map0", "r") as f:
@@ -98,7 +105,7 @@ class Board:
                     self.main_window_width - self.scrollbar_width)
         self.main_loop()
 
-    def draw_pedastrians(self):
+    def draw_pedestrians(self):
         for area in self.pedestrian_areas:
             for i in range(area.total_width):
                 for j in range(area.total_height):
@@ -110,6 +117,18 @@ class Board:
                                         self.cell_size)
                         )
 
+    def draw_cars(self):
+        cars = self.engine.cars
+        for i in range(len(cars)):
+            for j in range(len(cars[i])):
+                if isinstance(cars[i][j], Engine.RoadVehicle):
+                    x_be, y_be = cars[i][j].position
+                    drawing_range = (cars[i][j].length, cars[i][j].width)
+                    if j != 0:
+                        x_be = x_be - drawing_range[0]
+                        y_be = y_be - drawing_range[1]
+                    pygame.draw.rect(self.main_screen, self.colors[4],
+                                     pygame.Rect(x_be, y_be, drawing_range[0], drawing_range[1]))
 
     def main_loop(self):
         clock = pygame.time.Clock()
@@ -161,7 +180,8 @@ class Board:
                 pygame.Rect(self.scrollbar_x, self.main_window_height - self.scrollbar_height, self.scrollbar_width, self.scrollbar_height)
             )
 
-            self.draw_pedastrians()
+            self.draw_pedestrians()
+            self.draw_cars()
             pygame.display.flip()
             if elapsed_time >= iteration_interval:
                 self.engine.iteration()

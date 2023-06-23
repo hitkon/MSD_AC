@@ -1,23 +1,14 @@
-from collections import namedtuple
+import copy
 import queue
-from random import randint
+from collections import namedtuple
 from Participants import *
+from Crossings import *
 
 Fraction = namedtuple('Fraction', ['numerator', 'denominator'])
 
 
 def rand_with_probability(prob: Fraction):
     return randint(1, prob[1]) <= prob[0]
-
-
-def map_pos_to_arr_ind(position: tuple):
-    if position[1] < 21:
-        return position[0], 0
-    if position[1] < 28:
-        return position[0], 1
-    if position[1] < 34:
-        return position[0], 2
-    return position[0], 3
 
 
 class Engine:
@@ -29,9 +20,6 @@ class Engine:
 
     crossing_open_duration = 40
     crossing_close_duration = 19
-
-
-
 
     def __init__(self, map: list, pedestrian_arreas: list):
         self.map_w = len(map)
@@ -51,24 +39,20 @@ class Engine:
             for i in range(tup[0], tup[1]):
                 self.cars[i][1] = None
 
-
-    def get_map(self):  # todo
-        return [[0 for _ in range(self.map_h)] for i in range(self.map_w)]
-
     def is_occupied(self, x: int, y: int) -> bool:   # should work
         x_ind, y_ind = map_pos_to_arr_ind((x, y))
         if self.cars[x_ind][y_ind] != 0:
             return True
         if y_ind == 0:
             for i in range(1, min(1 + BigBus.length, x_ind + 1)):
-                if isinstance(self.cars[x_ind-i][y_ind], RoadVehicle):
+                if is_vehicle(self.cars[x_ind-i][y_ind]):
                     car = self.cars[x_ind-i][y_ind]
                     dist = i
                     return dist > car.length
             return False
         else:
             for i in range(1, min(1 + BigBus.length, self.map_w)):
-                if isinstance(self.cars[x_ind+i][y_ind], RoadVehicle):
+                if is_vehicle(self.cars[x_ind+i][y_ind]):
                     car = self.cars[x_ind+i][y_ind]
                     dist = i
                     return dist > car.length
@@ -81,38 +65,38 @@ class Engine:
             car_scooter_prob = Fraction(10, 13)
             initial_pos = (669, 70)
             if rand_with_probability(car_scooter_prob):
-                veh = Car(initial_pos,self.cars)
+                veh = Car(initial_pos, self.cars)
             else:
-                veh = Scooter(initial_pos,self.cars)
+                veh = Scooter(initial_pos, self.cars)
             self.budryka_cars[1].append(veh)
         prob_kawiory_spawn = Fraction(1, 300)
         if rand_with_probability(prob_kawiory_spawn):
             car_scooter_prob = Fraction(2, 3)
             initial_pos = (751, 70)
             if rand_with_probability(car_scooter_prob):
-                veh = Car(initial_pos,self.cars)
+                veh = Car(initial_pos, self.cars)
             else:
-                veh = Scooter(initial_pos,self.cars)
+                veh = Scooter(initial_pos, self.cars)
             self.kawiory_cars[1].append(veh)
         # Kijowska
         phase = self.iter_counter % 60
-        initial_pos = (1390, 15)
+        initial_pos = (self.map_w-1, 15)
         if 40 > phase >= 0 and not self.is_occupied(initial_pos[0], initial_pos[1]):
             prob_kijowska_spawn = Fraction(1, 15)
             if rand_with_probability(prob_kijowska_spawn):
-                self.add_car(Car(initial_pos,self.cars))
+                self.add_car(Car(initial_pos, self.cars))
         elif phase == 40:
             cars_to_spawn = randint(7, 13)
             for i in range(cars_to_spawn):
                 rand = randint(1, 149)
                 if rand < 143:
-                    self.kijowska_to_spawn.put(Car(initial_pos,self.cars))
+                    self.kijowska_to_spawn.put(Car(initial_pos, self.cars))
                 elif rand < 147:
-                    self.kijowska_to_spawn.put(BigBus(initial_pos,self.cars))
+                    self.kijowska_to_spawn.put(BigBus(initial_pos, self.cars))
                 elif rand < 149:
-                    self.kijowska_to_spawn.put(Bus(initial_pos,self.cars))
+                    self.kijowska_to_spawn.put(Bus(initial_pos, self.cars))
                 else:
-                    self.kijowska_to_spawn.put(Truck(initial_pos,self.cars))
+                    self.kijowska_to_spawn.put(Truck(initial_pos, self.cars))
         elif not self.kijowska_to_spawn.empty() and not self.is_occupied(initial_pos[0], initial_pos[1]):
             self.add_car(self.kijowska_to_spawn.get())
         # Armii Krajowej
@@ -123,22 +107,22 @@ class Engine:
             for i in range(cars_to_spawn):
                 rand = randint(1, 153)
                 if rand < 133:
-                    self.ak_to_spawn.put(Car(initial_pos,self.cars))
+                    self.ak_to_spawn.put(Car(initial_pos, self.cars))
                 elif rand < 141:
-                    self.ak_to_spawn.put(BigBus(initial_pos,self.cars))
+                    self.ak_to_spawn.put(BigBus(initial_pos, self.cars))
                 elif rand < 147:
-                    self.ak_to_spawn.put(Bus(initial_pos,self.cars))
+                    self.ak_to_spawn.put(Bus(initial_pos, self.cars))
                 elif rand < 153:
-                    self.ak_to_spawn.put(Scooter(initial_pos,self.cars))
+                    self.ak_to_spawn.put(Scooter(initial_pos, self.cars))
                 else:
-                    self.ak_to_spawn.put(Truck(initial_pos,self.cars))
+                    self.ak_to_spawn.put(Truck(initial_pos, self.cars))
         elif phase < 50:
             if not self.is_occupied(initial_pos[0], initial_pos[1]):
                 self.add_car(self.ak_to_spawn.get())
         elif not self.is_occupied(initial_pos[0], initial_pos[1]):
             prob_piastowska_spawn = Fraction(2, 35)
             if rand_with_probability(prob_piastowska_spawn):
-                self.add_car(Car(initial_pos,self.cars))
+                self.add_car(Car(initial_pos, self.cars))
 
     def traffic_lights_crossing(self):
         # stale (ilosc iteracji po ktorych nastepuje zmiana)
@@ -161,17 +145,57 @@ class Engine:
                     if self.map[i][j] == 6:  # crossing_close
                         self.map[i][j] = 3  # crossing
 
-
     def iteration(self):  # todo
-        self.spawn_cars()
+        # self.spawn_cars()
         self.traffic_lights_crossing()
         self.spawn_pedestrians()
         self.move_pedestrians()
+        # self.move_cars()
         self.iter_counter += 1
 
-
     def move_cars(self):  # todo
-        pass
+        cars_copy = copy.deepcopy(self.cars)
+        for x in range(self.map_w):
+            for y in range(3):
+                if is_vehicle(cars_copy[x][y]):
+                    self.cars[x][y].set_speed()
+        for x in range(self.map_w):
+            if is_vehicle(cars_copy[x][0]):
+                new_x = x - self.cars[x][0].speed
+                if new_x >= 0:
+                    self.move_car(x, 0, new_x, 0)
+                self.cars[x][0] = 0
+            if is_vehicle(cars_copy[x][1]):
+                new_x = x + self.cars[x][1].speed
+                if new_x < self.map_w:
+                    if self.cars[new_x][1] is not None:
+                        self.move_car(x, 1, new_x, 1)
+                    else:
+                        self.move_car(x, 1, new_x, 2)
+                else:
+                    self.cars[x][1] = 0
+            if is_vehicle(cars_copy[x][2]):
+                new_x = x + self.cars[x][2].speed
+                if new_x < self.map_w:
+                    self.move_car(x, 2, new_x, 2)
+                else:
+                    self.cars[x][2] = 0
+
+    def move_car(self, x_from, y_from, x_to, y_to):
+        if is_vehicle(self.cars[x_to][y_to]):
+            raise Exception("2 cars cannot be on one field")
+        if y_to == y_from:
+            self.cars[x_from][y_from].position = (x_to, self.cars[x_from][y_to].position[1])
+        elif y_to == 2:
+            self.cars[x_from][y_from].position = (x_to, 33)
+        elif y_to == 1:
+            self.cars[x_from][y_from].position = (x_to, 27)
+        elif y_to == 0:
+            self.cars[x_from][y_from].position = (x_to, 15)
+        else:
+            print("Unknown position")
+        self.cars[x_to][y_to] = self.cars[x_from][y_from]
+        self.cars[x_from][y_from] = 0
 
     def spawn_pedestrians(self):
 
@@ -183,7 +207,6 @@ class Engine:
                     area.spawn_pedestrian_up()
                 else:
                     area.spawn_pedestrian_down()
-
 
     def move_pedestrians(self):
 
