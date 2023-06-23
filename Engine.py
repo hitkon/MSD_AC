@@ -60,24 +60,24 @@ class Engine:
 
     def spawn_cars(self):
         # Budryka & Kawiory
-        prob_budryka_spawn = Fraction(14, 1000)
-        if rand_with_probability(prob_budryka_spawn):
-            car_scooter_prob = Fraction(10, 13)
-            initial_pos = (669, 70)
-            if rand_with_probability(car_scooter_prob):
-                veh = Car(initial_pos, self.cars)
-            else:
-                veh = Scooter(initial_pos, self.cars)
-            self.budryka_cars[1].append(veh)
-        prob_kawiory_spawn = Fraction(1, 300)
-        if rand_with_probability(prob_kawiory_spawn):
-            car_scooter_prob = Fraction(2, 3)
-            initial_pos = (751, 70)
-            if rand_with_probability(car_scooter_prob):
-                veh = Car(initial_pos, self.cars)
-            else:
-                veh = Scooter(initial_pos, self.cars)
-            self.kawiory_cars[1].append(veh)
+        # prob_budryka_spawn = Fraction(14, 1000)
+        # if rand_with_probability(prob_budryka_spawn):
+        #     car_scooter_prob = Fraction(10, 13)
+        #     initial_pos = (669, 70)
+        #     if rand_with_probability(car_scooter_prob):
+        #         veh = Car(initial_pos, self.cars)
+        #     else:
+        #         veh = Scooter(initial_pos, self.cars)
+        #     self.budryka_cars[1].append(veh)
+        # prob_kawiory_spawn = Fraction(1, 300)
+        # if rand_with_probability(prob_kawiory_spawn):
+        #     car_scooter_prob = Fraction(2, 3)
+        #     initial_pos = (751, 70)
+        #     if rand_with_probability(car_scooter_prob):
+        #         veh = Car(initial_pos, self.cars)
+        #     else:
+        #         veh = Scooter(initial_pos, self.cars)
+        #     self.kawiory_cars[1].append(veh)
         # Kijowska
         phase = self.iter_counter % 60
         initial_pos = (self.map_w-1, 15)
@@ -117,7 +117,7 @@ class Engine:
                 else:
                     self.ak_to_spawn.put(Truck(initial_pos, self.cars))
         elif phase < 50:
-            if not self.is_occupied(initial_pos[0], initial_pos[1]):
+            if not self.is_occupied(initial_pos[0], initial_pos[1]) and not self.ak_to_spawn.empty():
                 self.add_car(self.ak_to_spawn.get())
         elif not self.is_occupied(initial_pos[0], initial_pos[1]):
             prob_piastowska_spawn = Fraction(2, 35)

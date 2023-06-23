@@ -133,14 +133,17 @@ class Board:
 
     def main_loop(self):
         # clock = pygame.time.Clock()
-        # iteration_interval = 1000  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
-        # elapsed_time = 0
+        iteration_interval = 1000  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
+        elapsed_time = 0
+        # counter = 0
         while True:
-            # delta_time = self.clock.tick()  # Maksymalna liczba klatek na sekundę (FPS) - można dostosować
-            # elapsed_time += delta_time
+            delta_time = self.clock.tick()  # Maksymalna liczba klatek na sekundę (FPS) - można dostosować
+            elapsed_time += delta_time
 
             # self.clock.tick(100)
-            pygame.time.wait(1000)
+            # pygame.time.wait(1000)
+            # sleep(1)
+            # print("Drawing", counter, "begin")
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -182,12 +185,14 @@ class Board:
                 pygame.Rect(self.scrollbar_x, self.main_window_height - self.scrollbar_height, self.scrollbar_width, self.scrollbar_height)
             )
 
-            # if elapsed_time >= iteration_interval:
-            self.engine.iteration()
-            # elapsed_time = 0
-            self.draw_pedestrians()
-            self.draw_cars()
-            pygame.display.flip()
+            if elapsed_time >= iteration_interval:
+                self.engine.iteration()
+                elapsed_time = 0
+                self.draw_pedestrians()
+                self.draw_cars()
+                pygame.display.flip()
+            # print("Drawing", counter, "end")
+            # counter += 1
 
 
 if __name__ == '__main__':

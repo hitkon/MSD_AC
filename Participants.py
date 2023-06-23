@@ -76,7 +76,7 @@ class RoadVehicle:
         else:
             be = 1
             if self.will_switch:
-                be -= self.length
+                be = -Car.max_speed
                 if y == 1:
                     y += 1
                 else:
@@ -85,7 +85,7 @@ class RoadVehicle:
             for i in range(be, self.speed + self.acceleration + 1 + max_veh_len):
                 if x+i >= len(self.map):
                     return self.speed + self.acceleration + 1 + max_veh_len
-                if is_vehicle(self.map[x+i][y]):
+                if x+i >= 0 and is_vehicle(self.map[x+i][y]):
                     return i - self.map[x+i][y].length
         return self.speed + self.acceleration + 1 + max_veh_len
 
@@ -99,7 +99,7 @@ class RoadVehicle:
             return
         if y == 1:
             for i in range(1, self.speed + self.acceleration + 1):
-                if x + i > len(self.map):
+                if x + i >= len(self.map):
                     self.will_switch = False
                     return
                 if self.map[x+i][y] is None:
@@ -120,7 +120,7 @@ class RoadVehicle:
 
     def accelerate(self, distance_to_obstacle):
         if self.speed < self.max_speed and self.speed + self.acceleration < distance_to_obstacle:
-            self.speed = min(self.speed + self.acceleration, self.max_speed)
+            self.speed = min(self.speed + self.acceleration, self.max_speed, distance_to_obstacle - 1)
 
     def brake(self, distance_to_obstacle):
         if self.speed >= distance_to_obstacle:
@@ -141,6 +141,7 @@ class RoadVehicle:
         dist = min(self.distance_to_moving_obstacle(), self.distance_to_static_obstacle())
         self.accelerate(dist)
         self.brake(dist)
+        # print("distance to obstacle:", dist, "\nSpeed:", self.speed)
 
 
 class Car(RoadVehicle):
