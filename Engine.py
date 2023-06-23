@@ -145,18 +145,18 @@ class Engine:
                     if self.map[i][j] == 6:  # crossing_close
                         self.map[i][j] = 3  # crossing
 
-    def iteration(self):  # todo
-        # self.spawn_cars()
+    def iteration(self):
+        self.spawn_cars()
         self.traffic_lights_crossing()
         self.spawn_pedestrians()
         self.move_pedestrians()
-        # self.move_cars()
+        self.move_cars()
         self.iter_counter += 1
 
-    def move_cars(self):  # todo
+    def move_cars(self):
         cars_copy = copy.deepcopy(self.cars)
         for x in range(self.map_w):
-            for y in range(3):
+            for y in range(len(cars_copy[x])):
                 if is_vehicle(cars_copy[x][y]):
                     self.cars[x][y].set_speed()
         for x in range(self.map_w):
@@ -182,6 +182,8 @@ class Engine:
                     self.cars[x][2] = 0
 
     def move_car(self, x_from, y_from, x_to, y_to):
+        if x_to == x_from and y_from == y_to:
+            return
         if is_vehicle(self.cars[x_to][y_to]):
             raise Exception("2 cars cannot be on one field")
         if y_to == y_from:

@@ -80,7 +80,7 @@ class RoadVehicle:
 
     def brake(self, distance_to_obstacle):
         if self.speed >= distance_to_obstacle:
-            self.speed = min(max(self.speed - self.acceleration, 0), distance_to_obstacle)
+            self.speed = min(max(self.speed - self.acceleration, 0), distance_to_obstacle-1)
 
     # def move_vehicle(self):
     #     distance_to_obstacle = min(self.look_ahead_moving_obstacle(), self.look_ahead_static_obstacle())
