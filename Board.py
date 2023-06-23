@@ -140,7 +140,7 @@ class Board:
             # elapsed_time += delta_time
 
             # self.clock.tick(100)
-            pygame.time.wait(500)
+            pygame.time.wait(1000)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()

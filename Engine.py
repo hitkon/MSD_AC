@@ -39,23 +39,23 @@ class Engine:
             for i in range(tup[0], tup[1]):
                 self.cars[i][1] = None
 
-    def is_occupied(self, x: int, y: int) -> bool:   # should work
+    def is_occupied(self, x: int, y: int) -> bool:
         x_ind, y_ind = map_pos_to_arr_ind((x, y))
         if self.cars[x_ind][y_ind] != 0:
             return True
         if y_ind == 0:
-            for i in range(1, min(1 + BigBus.length, x_ind + 1)):
+            for i in range(1, min(1 + max_veh_len, x_ind + 1)):
                 if is_vehicle(self.cars[x_ind-i][y_ind]):
                     car = self.cars[x_ind-i][y_ind]
                     dist = i
-                    return dist > car.length
+                    return dist < car.length
             return False
         else:
-            for i in range(1, min(1 + BigBus.length, self.map_w)):
+            for i in range(1, min(1 + max_veh_len, self.map_w)):
                 if is_vehicle(self.cars[x_ind+i][y_ind]):
                     car = self.cars[x_ind+i][y_ind]
                     dist = i
-                    return dist > car.length
+                    return dist < car.length
             return False
 
     def spawn_cars(self):
@@ -177,7 +177,10 @@ class Engine:
             if is_vehicle(cars_copy[x][2]):
                 new_x = x + self.cars[x][2].speed
                 if new_x < self.map_w:
-                    self.move_car(x, 2, new_x, 2)
+                    if self.cars[x][2].preferred_lane == 'l' and self.cars[x][1] is not None:
+                        self.move_car(x, 2, new_x, 1)
+                    else:
+                        self.move_car(x, 2, new_x, 2)
                 else:
                     self.cars[x][2] = 0
 

@@ -39,9 +39,16 @@ class RoadVehicle:
         self.speed = 0
         self.map = map
         self.preferred_lane = 'l'
+        self.will_switch = False
 
-    # def look_ahead_static_obstacle(self) -> int:              # doesn't work for 1st lane
-    #     x, y = map_pos_to_arr_ind(self.position)
+    def distance_to_static_obstacle(self) -> int:
+        # todo check pedestrians
+        x, y = map_pos_to_arr_ind(self.position)
+        if y == 0:
+            pass
+        else:
+            pass
+        return self.speed + self.acceleration + 1 + max_veh_len
     #     i = 0
     #
     #     while RoadVehicle.look_ahead_variable > i > 0 and i < len(self.map[0]):
@@ -57,7 +64,7 @@ class RoadVehicle:
     #             i += 1
     #
     #     return abs(i)
-    #
+
     def distance_to_moving_obstacle(self) -> int:
         x, y = map_pos_to_arr_ind(self.position)
         if y == 0:
@@ -67,12 +74,49 @@ class RoadVehicle:
                 if is_vehicle(self.map[x-i][y]):
                     return i - self.map[x-i][y].length
         else:
-            for i in range(1, self.speed + self.acceleration + 1 + max_veh_len):
+            be = 1
+            if self.will_switch:
+                be -= self.length
+                if y == 1:
+                    y += 1
+                else:
+                    y -= 1
+                self.will_switch = False
+            for i in range(be, self.speed + self.acceleration + 1 + max_veh_len):
                 if x+i >= len(self.map):
                     return self.speed + self.acceleration + 1 + max_veh_len
                 if is_vehicle(self.map[x+i][y]):
                     return i - self.map[x+i][y].length
         return self.speed + self.acceleration + 1 + max_veh_len
+
+    def update_will_switch(self):
+        if self.preferred_lane == 'r':
+            self.will_switch = False
+            return
+        x, y = map_pos_to_arr_ind(self.position)
+        if y == 0:
+            self.will_switch = False
+            return
+        if y == 1:
+            for i in range(1, self.speed + self.acceleration + 1):
+                if x + i > len(self.map):
+                    self.will_switch = False
+                    return
+                if self.map[x+i][y] is None:
+                    self.will_switch = True
+                    return
+            self.will_switch = False
+            return
+        if y == 2:
+            for i in range(1, self.speed + self.acceleration + 1):
+                if x + i > len(self.map):
+                    self.will_switch = False
+                    return
+                if self.map[x+i][y] is not None:
+                    self.will_switch = True
+                    return
+            self.will_switch = False
+            return
 
     def accelerate(self, distance_to_obstacle):
         if self.speed < self.max_speed and self.speed + self.acceleration < distance_to_obstacle:
@@ -93,7 +137,8 @@ class RoadVehicle:
 
     def set_speed(self):
         # todo check if pedestrian is on the way
-        dist = self.distance_to_moving_obstacle()
+        self.update_will_switch()
+        dist = min(self.distance_to_moving_obstacle(), self.distance_to_static_obstacle())
         self.accelerate(dist)
         self.brake(dist)
 
