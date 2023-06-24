@@ -11,6 +11,9 @@ def rand_with_probability(prob: Fraction):
     return randint(1, prob[1]) <= prob[0]
 
 
+
+
+
 class Engine:
     # todo real values
     # probability of turn
@@ -37,6 +40,13 @@ class Engine:
         for tup in two_lanes:
             for i in range(tup[0], tup[1]):
                 self.cars[i][1] = None
+
+    def is_any_vehicle_there(self, x_from: int, y_from: int, x_to: int, y_to: int) -> bool:
+        for x in range(x_from, x_to + 1):
+            for y in range(y_from, y_to + 1):
+                if is_vehicle(self.cars[x][y]):
+                    return True
+        return False
 
     def is_occupied(self, x: int, y: int) -> bool:
         x_ind, y_ind = map_pos_to_arr_ind((x, y))
@@ -174,7 +184,16 @@ class Engine:
             if is_vehicle(cars_copy[x][0]):
                 new_x = x - self.cars[x][0].speed
                 if new_x >= 0:
-                    self.move_car(x, 0, new_x, 0)
+                    if self.cars[x][0].will_turn and new_x == 742:
+                        if not self.is_any_vehicle_there(742-2*max_veh_speed, 1, 742 + 6, 2):
+                            self.move_car(x, 0, new_x, 3)
+                    elif self.cars[x][0].will_turn and new_x <= 660:
+                        if not self.is_any_vehicle_there(660 - 2*max_veh_speed, 1, 660 + 6, 2):
+                            self.move_car(x, 0, 660, 3)
+                        else:
+                            self.move_car(x, 0, 660, 0)
+                    else:
+                        self.move_car(x, 0, new_x, 0)
                 else:
                     self.cars[x][0] = 0
             if is_vehicle(cars_copy[x][1]):
@@ -189,20 +208,27 @@ class Engine:
             if is_vehicle(cars_copy[x][2]):
                 new_x = x + self.cars[x][2].speed
                 if new_x < self.map_w:
-                    if self.cars[x][2].preferred_lane == 'l' and self.cars[x][1] is not None:
+                    if self.cars[x][2].will_turn and new_x >= 645:
+                        if new_x >= 742:
+                            self.move_car(x, 2, new_x, 3)
+                        elif new_x == 660:
+                            self.move_car(x, 2, new_x, 3)
+                        else:
+                            self.move_car(x, 2, new_x, 2)
+                    elif self.cars[x][2].preferred_lane == 'l' and self.cars[x][1] is not None:
                         self.move_car(x, 2, new_x, 1)
                     else:
                         self.move_car(x, 2, new_x, 2)
                 else:
                     self.cars[x][2] = 0
-        if len(self.budryka_cars[1]) > 0:
-            self.move_cars_from_list(self.budryka_cars[1], True)
-        if len(self.kawiory_cars[1]) > 0:
-            self.move_cars_from_list(self.kawiory_cars[1], True)
+        self.move_cars_from_list(self.budryka_cars[1], True)
+        self.move_cars_from_list(self.kawiory_cars[1], True)
         self.move_cars_from_list(self.budryka_cars[0], False)
         self.move_cars_from_list(self.kawiory_cars[0], False)
 
     def move_cars_from_list(self, cars_list: list, upwards: bool):
+        if len(cars_list) == 0:
+            return
         if not upwards:
             i = len(cars_list) - 1
             while i >= 0:
@@ -248,7 +274,7 @@ class Engine:
     def move_car(self, x_from, y_from, x_to, y_to):
         if x_to == x_from and y_from == y_to:
             return
-        if is_vehicle(self.cars[x_to][y_to]):
+        if y_to != 3 and is_vehicle(self.cars[x_to][y_to]):
             raise Exception("2 cars cannot be on one field")
         if y_from == 3:
             if x_from < 700:
@@ -260,6 +286,15 @@ class Engine:
                 y_pos = 15
             self.cars[x_to][y_to].position = (x_to, y_pos)
             return
+        if y_to == 3:
+            if x_to == 660:
+                self.budryka_cars[0].append(self.cars[x_from][y_from])
+            else:
+                self.kawiory_cars[0].append(self.cars[x_from][y_from])
+                x_to = 742
+            self.cars[x_from][y_from].position = (x_to, 34)
+            self.cars[x_from][y_from] = 0
+            return
         if y_to == y_from:
             self.cars[x_from][y_from].position = (x_to, self.cars[x_from][y_to].position[1])
         elif y_to == 2:
@@ -270,7 +305,6 @@ class Engine:
             self.cars[x_from][y_from].position = (x_to, 15)
         else:
             print("Unknown position")
-
         self.cars[x_to][y_to] = self.cars[x_from][y_from]
         self.cars[x_from][y_from] = 0
 

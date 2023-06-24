@@ -131,17 +131,22 @@ class Board:
                                      pygame.Rect((x_be + self.scroll_x)*self.cell_size, y_be*self.cell_size,
                                                  drawing_range[0]*self.cell_size, drawing_range[1]*self.cell_size))
 
-        def draw_cars_from_list(cars: list):
+        def draw_cars_from_list(cars: list, upwards: bool):
             for car in cars:
                 x_be, y_be = car.position
                 drawing_range = (car.width, car.length)
-                x_be -= drawing_range[0]
+                if upwards:
+                    x_be -= drawing_range[0]
+                else:
+                    y_be -= drawing_range[1]
                 pygame.draw.rect(self.main_screen, self.colors[4],
                                  pygame.Rect((x_be + self.scroll_x) * self.cell_size, y_be * self.cell_size,
                                              drawing_range[0] * self.cell_size, drawing_range[1] * self.cell_size))
 
-        draw_cars_from_list(self.engine.budryka_cars[1])
-        draw_cars_from_list(self.engine.kawiory_cars[1])
+        draw_cars_from_list(self.engine.budryka_cars[0], False)
+        draw_cars_from_list(self.engine.budryka_cars[1], True)
+        draw_cars_from_list(self.engine.kawiory_cars[0], False)
+        draw_cars_from_list(self.engine.kawiory_cars[1], True)
 
     def main_loop(self):
         iteration_interval = 10  # Time between iterations in ms, change to 10 (or any low number) for debug purpose

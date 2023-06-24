@@ -44,6 +44,7 @@ class RoadVehicle:
         self.will_switch = False
         self.iters_to_wait = 25    # how much time does a bus need to wait on a bus stop
         self.will_turn = False
+        self.chosen_route = 0      # for choosing Budryka/Kawiory (0/1) turn
 
     def distance_to_static_obstacle(self) -> int:
         # todo check pedestrians
@@ -53,6 +54,11 @@ class RoadVehicle:
             pass
         else:
             pass
+        if self.will_turn:
+            if self.chosen_route == 0:
+                return abs(660 - x) + 1
+            else:
+                return abs(742 - x) + 1
         if self.stops and y == 2:
             if x < bus_stop_cord:
                 return bus_stop_cord - x + 1
@@ -108,6 +114,7 @@ class RoadVehicle:
                         return min(self.speed + self.acceleration + 1 + max_veh_len, found_so_far)
                     if x+i >= 0 and is_vehicle(self.map[x+i][y]):
                         return min(i - self.map[x+i][y].length, found_so_far)
+                return found_so_far
             else:
                 return found_so_far
         return self.speed + self.acceleration + 1 + max_veh_len
@@ -155,7 +162,7 @@ class RoadVehicle:
     def set_speed(self):
         # todo check if pedestrian is on the way
         self.update_will_switch()
-        dist = min(self.distance_to_moving_obstacle(), self.distance_to_static_obstacle())
+        dist = min(self.distance_to_moving_obstacle(), self.distance_to_static_obstacle()//2 + 1)
         self.accelerate(dist)
         self.brake(dist)
         if self.speed == 0 and 100 < self.position[0] < 1300:
@@ -172,6 +179,7 @@ class Car(RoadVehicle):
         self.can_turn = True
         # self.will_turn = will_turn
         self.max_speed = 28
+        self.chosen_route = random.randint(0, 1) == 1
 
     def look_other_lane_ahead_and_behind(self, x: int, y: int) -> (int, int):
 
@@ -276,6 +284,7 @@ class Scooter(RoadVehicle):
         self.width = 2
         self.length = 4
         self.can_turn = True
+        self.chosen_route = random.randint(0, 1) == 1
 
 
 class Pedestrian:
