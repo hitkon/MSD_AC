@@ -22,7 +22,6 @@ class Board:
         self.main_window_size = self.main_window_width, self.main_window_height = 1200, 420
         self.sub_window_size = self.sub_window_width, self.sub_window_height = 1200, 210
         self.speed = [1, 1]
-        self.black = 0, 0, 0
         self.cell_size = 3
         self.scroll_x = 0
         self.scroll_vel = 4
@@ -93,6 +92,7 @@ class Board:
         self.init_map()
         self.load_pedestrian_spawn_points()
         self.engine = Engine.Engine(self.map, self.pedestrian_areas)
+        Engine.RoadVehicle.engine = self.engine
         self.main_screen = pygame.display.set_mode(self.main_window_size)
         self.sub_screen = pygame.Surface(self.sub_window_size)
         self.sub_screen.fill((255, 255, 255))
@@ -200,7 +200,6 @@ class Board:
                 self.engine.iteration()
                 elapsed_time = 0
             pygame.display.flip()
-
 
 
 if __name__ == '__main__':

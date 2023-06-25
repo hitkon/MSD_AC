@@ -11,12 +11,7 @@ def rand_with_probability(prob: Fraction):
     return randint(1, prob[1]) <= prob[0]
 
 
-
-
-
 class Engine:
-    # todo real values
-    # probability of turn
     turn_prob_right = Fraction(3, 156)
     turn_prob_left = Fraction(2, 142)
 
@@ -332,3 +327,9 @@ class Engine:
         pos = map_pos_to_arr_ind(vehicle.position)
         self.cars[pos[0]][pos[1]] = vehicle
 
+    def can_pass_crossing(self, crossing_num: int) -> bool:   # todo
+        # 0 - crossing with lights, 1 - crossing near Budryka, 2 - crossing near D17
+        if crossing_num < 0 or crossing_num > 2:
+            raise Exception("Wrong crossing number")
+
+        return True
