@@ -1,16 +1,6 @@
-from time import sleep
-
 import pygame
 import sys
 import Engine
-
-
-# def sign(x: int) -> int:
-#     if x < 0:
-#         return -1
-#     elif x == 0:
-#         return 0
-#     return 1
 
 
 class Board:
@@ -29,6 +19,10 @@ class Board:
         self.sub_screen = None
         self.legend_elems = []
         self.legend_labels = ["Legend:", "Pavement", "Road", "Crossing", "Vehicle", "Pedestrian", "Crossing closed"]
+        self.speed_cont_vals = [1, 2, 3, 4, 5, 10, 25, 50, 100]
+        self.chosen_speed = 0   # index of array above
+        self.speed_cont_x = 600
+        self.speed_box_width = 15
         self.map = []
         self.map_h, self.map_w = 0, 0
         # colors_ids: 0 - not usable, 1 - pavement, 2 - road, 3 - crossing, 4 - vehicle, 5 - pedestrian, 6 - crossing_closed
@@ -82,11 +76,24 @@ class Board:
             pygame.draw.rect(self.sub_screen, self.colors[i], pygame.Rect(180 + spacing*((i-1)//elems_in_col),
                                                                           40 + 30 * ((i-1) % elems_in_col), 20, 20))
 
+    def create_speed_control(self):
+        self.sub_screen.blit(self.font.render("Simulation speed", True, (0, 0, 0)), [self.speed_cont_x, 10])
+        counter = self.speed_cont_x
+        for i in self.speed_cont_vals:
+            self.sub_screen.blit(self.font.render(str(i), True, (0, 0, 0)), [counter, 70])
+            counter += 30
+
     def is_click_inside_scrollbar(self, event):
         return (
                 self.scrollbar_x <= event.pos[0] <= self.scrollbar_x + self.scrollbar_width and
                 self.main_window_height - self.scrollbar_height <= event.pos[1] <= self.main_window_height
         )
+
+    def is_click_in_counters_zone(self, event):
+        n = len(self.speed_cont_vals)
+        return self.speed_cont_x <= event.pos[0] <= self.speed_cont_x + n*(n-1)*self.speed_box_width \
+            and self.sub_window_size[1] + 40 <= event.pos[1] <= self.sub_window_size[1] + 40 + self.speed_box_width \
+            and (event.pos[0] - self.speed_cont_x)//self.speed_box_width % 2 == 0
 
     def start(self):
         self.init_map()
@@ -97,7 +104,7 @@ class Board:
         self.sub_screen = pygame.Surface(self.sub_window_size)
         self.sub_screen.fill((255, 255, 255))
         self.create_legend()
-
+        self.create_speed_control()
         #self.total_width = self.map_w * self.cell_size
         self.total_width = 2190
         # self.scrollbar_width = self.total_width /
@@ -116,6 +123,10 @@ class Board:
                                         (j + area.up_spawn_range[0]) * self.cell_size, self.cell_size,
                                         self.cell_size)
                         )
+
+    def change_simulation_speed(self, event):
+        i = (event.pos[0] - self.speed_cont_x)//self.speed_box_width
+        self.chosen_speed = i//2
 
     def draw_cars(self):
         cars = self.engine.cars
@@ -148,8 +159,45 @@ class Board:
         draw_cars_from_list(self.engine.kawiory_cars[0], False)
         draw_cars_from_list(self.engine.kawiory_cars[1], True)
 
+    def draw_map(self):
+        self.main_screen.fill((0, 0, 0))
+        for i in range(self.map_w + 1):
+            for j in range(self.map_h + 1):
+                pygame.draw.rect(
+                    self.main_screen, self.colors[self.map[i][j]],
+                    pygame.Rect((i + self.scroll_x) * self.cell_size, j * self.cell_size, self.cell_size,
+                                self.cell_size)
+                )
+
+    def draw_scrollbar(self):
+        self.main_screen.blit(
+            self.sub_screen,
+            ((self.main_window_width - self.sub_window_width) // 2, self.main_window_height - self.sub_window_height)
+        )
+        pygame.draw.rect(
+            self.main_screen, (0, 0, 0),
+            pygame.Rect(self.scrollbar_x, self.main_window_height - self.scrollbar_height, self.scrollbar_width,
+                        self.scrollbar_height)
+        )
+
+    def draw_speed_control(self):
+        x_pos = self.speed_cont_x
+        y_pos = 40
+        width = self.speed_box_width
+        contour = 3
+        button_col = (255, 0, 0)
+        for i in range(len(self.speed_cont_vals)):
+            pygame.draw.rect(self.sub_screen, button_col, pygame.Rect(x_pos, y_pos, width, width))
+            pygame.draw.rect(self.sub_screen, (255, 255, 255), pygame.Rect(x_pos + contour, y_pos + contour,
+                                                                           width - 2*contour, width - 2*contour))
+            if self.chosen_speed == i:
+                pygame.draw.rect(self.sub_screen, button_col, pygame.Rect(x_pos + contour + 1, y_pos + contour + 1,
+                                                                               width - 2 * (contour + 1),
+                                                                               width - 2 * (contour + 1)))
+            x_pos += 2*width
+
     def main_loop(self):
-        iteration_interval = 10  # Time between iterations in ms, change to 10 (or any low number) for debug purpose
+        iteration_interval = 1000  # Time between iterations in ms
         elapsed_time = 0
         while True:
             delta_time = self.clock.tick()
@@ -163,6 +211,8 @@ class Board:
                     if event.button == 1 and self.is_click_inside_scrollbar(event):
                         self.scrollbar_pressed = True
                         #print(event.pos[0], event.pos[1])
+                    elif event.button == 1 and self.is_click_in_counters_zone(event):
+                        self.change_simulation_speed(event)
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:
                         self.scrollbar_pressed = False
@@ -179,24 +229,12 @@ class Board:
             # if keys[pygame.K_RIGHT] and self.scroll_x > -988:
             #     self.scroll_x -= self.scroll_vel              # arrows movement
 
-            self.main_screen.fill((0, 0, 0))
-            for i in range(self.map_w + 1):
-                for j in range(self.map_h + 1):
-                    pygame.draw.rect(
-                        self.main_screen, self.colors[self.map[i][j]],
-                        pygame.Rect((i + self.scroll_x) * self.cell_size, j * self.cell_size, self.cell_size, self.cell_size)
-                    )
-
-            self.main_screen.blit(
-                self.sub_screen, ((self.main_window_width - self.sub_window_width) // 2, self.main_window_height - self.sub_window_height)
-            )
-            pygame.draw.rect(
-                self.main_screen, (0, 0, 0),
-                pygame.Rect(self.scrollbar_x, self.main_window_height - self.scrollbar_height, self.scrollbar_width, self.scrollbar_height)
-            )
+            self.draw_map()
+            self.draw_scrollbar()
+            self.draw_speed_control()
             self.draw_pedestrians()
             self.draw_cars()
-            if elapsed_time >= iteration_interval:
+            if elapsed_time >= iteration_interval//self.speed_cont_vals[self.chosen_speed]:
                 self.engine.iteration()
                 elapsed_time = 0
             pygame.display.flip()
