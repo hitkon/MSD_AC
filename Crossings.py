@@ -19,21 +19,21 @@ class PedestrianCrossing:
                 self.map[i].append([])
 
     def spawn_pedestrian_up(self):
-        # todo count amount of pedestrians to avoid situation with overfilling
+
         x = randint(0, self.total_width - 1)
         y = randint(self.up_spawn_range[0], self.up_spawn_range[1]) - self.up_spawn_range[0]
-        while len(self.map[x][y]) != 0:
-            x = randint(0, self.total_width - 1)
-            y = randint(self.up_spawn_range[0], self.up_spawn_range[1]) - self.up_spawn_range[0]
+        # while len(self.map[x][y]) != 0:
+        #     x = randint(0, self.total_width - 1)
+        #     y = randint(self.up_spawn_range[0], self.up_spawn_range[1]) - self.up_spawn_range[0]
         self.map[x][y].append(Pedestrian((x, y), -1))
 
     def spawn_pedestrian_down(self):
-        # todo count amount of pedestrians to avoid situation with overfilling
+
         x = randint(0, self.total_width - 1)
         y = randint(self.down_spawn_range[0], self.down_spawn_range[1]) - self.up_spawn_range[0]
-        while len(self.map[x][y]) != 0:
-            x = randint(0, self.total_width - 1)
-            y = randint(self.down_spawn_range[0], self.down_spawn_range[1]) - self.up_spawn_range[0]
+        # while len(self.map[x][y]) != 0:
+        #     x = randint(0, self.total_width - 1)
+        #     y = randint(self.down_spawn_range[0], self.down_spawn_range[1]) - self.up_spawn_range[0]
         self.map[x][y].append(Pedestrian((x, y), 1))
 
     def move(self):
@@ -58,6 +58,13 @@ class PedestrianCrossing:
                         elem.speed = min(Pedestrian.max_speed, elem.speed + 1)
                     # if randint(0, 10) <= 3:
                     #     self.map[i][j].speed = max(Pedestrian.max_speed, self.map[i][j].speed + 1)
+
+    def is_anyone_at_crossing(self):
+        for i in range(self.total_width):
+            for j in range(self.total_height):
+                if len(self.map[i][j]) != 0:
+                    return True
+        return False
 
     def iterate(self):
         self.update_speed()
