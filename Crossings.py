@@ -12,6 +12,12 @@ class PedestrianCrossing:
         self.down_spawn_range = down_spawn_range
         self.total_width = width_range[1] - width_range[0] + 1
         self.total_height = down_spawn_range[1] - up_spawn_range[0] + 1
+        self.max_spawn_delay = 1
+        self.max_end_delay = 10
+        self.spawn_delay = self.max_spawn_delay
+        self.end_delay = self.max_end_delay
+        self.car_closed = False
+        self.pedestrian_end = False
         self.map = []
         for i in range(self.total_width):
             self.map.append([])
@@ -67,9 +73,25 @@ class PedestrianCrossing:
         return False
 
     def iterate(self):
+        if self.car_closed and self.spawn_delay > 0:
+            # self.spawn_delay = 0
+            self.spawn_delay-=1
+            return
+
         self.update_speed()
         self.move()
 
+
+        if not self.is_anyone_at_crossing() and self.car_closed:
+            self.pedestrian_end = True
+            # self.pedestrian_end = True
+            # if self.spawn_delay < self.max_delay:
+                # self.spawn_delay+=1
+            # self.spawn_delay = self.max_delay
+                # return
+            # self.pedestrian_end = False
+            self.car_closed = False
+            self.spawn_delay = self.max_spawn_delay
 
 class Crossing:
     """

@@ -308,7 +308,22 @@ class Engine:
         for area in self.pedestrian_areas:
             if area.type == 1 and not self.crossing_closed:
                 continue
+            if area.type == 0 and area.car_closed:
+                continue
+            if area.type == 0 and area.pedestrian_end:
+                if area.end_delay < 0:
+                    area.end_delay -= 1
+                    continue
+                area.pedestrian_end = False
+                area.end_delay = area.max_end_delay
+                # area.spawn_delay = area.max_delay
+                # area.spawn_delay -= 1
+                # continue
+                # continue
+
             if randint(0, 100) <= area.spawn_prob:
+                if area.type == 0:
+                    area.car_closed = True
                 if randint(1, 2) == 1:
                     area.spawn_pedestrian_up()
                 else:
@@ -331,6 +346,6 @@ class Engine:
             raise Exception("Wrong crossing number")
         if crossing_num == 0 and self.crossing_closed:
             return True
-        if crossing_num != 0 and not self.pedestrian_areas[crossing_num].is_anyone_at_crossing():
+        if crossing_num != 0 and not self.pedestrian_areas[crossing_num].car_closed:
             return True
         return False
