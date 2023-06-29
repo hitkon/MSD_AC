@@ -3,6 +3,7 @@ import queue
 from collections import namedtuple
 from Participants import *
 from Crossings import *
+import csv
 
 Fraction = namedtuple('Fraction', ['numerator', 'denominator'])
 
@@ -16,7 +17,7 @@ class Engine:
     turn_prob_left = Fraction(2, 142)
 
     crossing_open_duration = 40
-    crossing_close_duration = 19
+    crossing_close_duration = 20
 
     def __init__(self, map: list, pedestrian_arreas: list):
         self.map_w = len(map)
@@ -31,11 +32,17 @@ class Engine:
         self.pedestrian_areas = pedestrian_arreas
         self.cars = [[0 for _ in range(3)] for i in range(self.map_w)]
         self.lights_mode = 0
+        self.pedestrian_info = [0, 0]
         two_lanes = [(0, 263), (613, 657), (1168, 1215)]
-        crossings = [(230,255),(622,645),(1181,1202)] #wspolrzedne przejsc z map0
+        crossings = [(230, 255), (622, 645), (1181, 1202)]  # wspolrzedne przejsc z map0
         for tup in two_lanes:
             for i in range(tup[0], tup[1]):
                 self.cars[i][1] = None
+
+
+        with open("history.csv", "w",newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["Amount of pedestrians", "Sum of their iteration waiting"])
 
     def is_any_vehicle_there(self, x_from: int, y_from: int, x_to: int, y_to: int) -> bool:
         for x in range(x_from, x_to + 1):
@@ -50,15 +57,15 @@ class Engine:
             return True
         if y_ind == 0:
             for i in range(1, min(1 + max_veh_len, x_ind + 1)):
-                if is_vehicle(self.cars[x_ind-i][y_ind]):
-                    car = self.cars[x_ind-i][y_ind]
+                if is_vehicle(self.cars[x_ind - i][y_ind]):
+                    car = self.cars[x_ind - i][y_ind]
                     dist = i
                     return dist < car.length
             return False
         else:
             for i in range(1, min(1 + max_veh_len, self.map_w)):
-                if is_vehicle(self.cars[x_ind+i][y_ind]):
-                    car = self.cars[x_ind+i][y_ind]
+                if is_vehicle(self.cars[x_ind + i][y_ind]):
+                    car = self.cars[x_ind + i][y_ind]
                     dist = i
                     return dist < car.length
             return False
@@ -68,7 +75,7 @@ class Engine:
         prob_budryka_spawn = Fraction(14, 1000)
         if rand_with_probability(prob_budryka_spawn):
             car_scooter_prob = Fraction(10, 13)
-            initial_pos = (672, 35 + 10*len(self.budryka_cars[1]))
+            initial_pos = (672, 35 + 10 * len(self.budryka_cars[1]))
             if rand_with_probability(car_scooter_prob):
                 veh = Car(initial_pos, self.cars)
             else:
@@ -79,7 +86,7 @@ class Engine:
         prob_kawiory_spawn = Fraction(1, 300)
         if rand_with_probability(prob_kawiory_spawn):
             car_scooter_prob = Fraction(2, 3)
-            initial_pos = (754, 35 + 10*len(self.kawiory_cars[1]))
+            initial_pos = (754, 35 + 10 * len(self.kawiory_cars[1]))
             if rand_with_probability(car_scooter_prob):
                 veh = Car(initial_pos, self.cars)
             else:
@@ -89,7 +96,7 @@ class Engine:
             self.kawiory_cars[1].append(veh)
         # Kijowska
         phase = self.iter_counter % 60
-        initial_pos = (self.map_w-1, 15)
+        initial_pos = (self.map_w - 1, 15)
         if 40 > phase >= 0 and not self.is_occupied(initial_pos[0], initial_pos[1]):
             prob_kijowska_spawn = Fraction(1, 15)
             if rand_with_probability(prob_kijowska_spawn):
@@ -153,11 +160,9 @@ class Engine:
             case 3:
                 pass   # todo implement no lights at this crossing
         # stale (ilosc iteracji po ktorych nastepuje zmiana)
-        crossing_open_duration = 40
-        crossing_close_duration = 20
 
         if self.crossing_closed is False and \
-            self.iter_counter % (crossing_close_duration + crossing_open_duration) == 0:
+                self.iter_counter % (Engine.crossing_close_duration + Engine.crossing_open_duration) == 0:
             self.crossing_closed = True
             for i in range(229, 255):
                 for j in range(14, 34):
@@ -165,12 +170,17 @@ class Engine:
                         self.map[i][j] = 6  # crossing_close
 
         if self.crossing_closed is True and self.iter_counter % (
-                crossing_close_duration + crossing_open_duration) == crossing_open_duration:
+                Engine.crossing_close_duration + Engine.crossing_open_duration) == Engine.crossing_open_duration:
             self.crossing_closed = False
             for i in range(229, 255):
                 for j in range(14, 34):
                     if self.map[i][j] == 6:  # crossing_close
                         self.map[i][j] = 3  # crossing
+
+            with open("history.csv", "a", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(self.pedestrian_info)
+            self.pedestrian_info = [0,0]
 
     def paint_lights_crossing(self, color_from: int, color_to: int):
         # 3 - green, 6 - red
@@ -209,10 +219,10 @@ class Engine:
                 new_x = x - self.cars[x][0].speed
                 if new_x >= 0:
                     if self.cars[x][0].will_turn and new_x == 742:
-                        if not self.is_any_vehicle_there(742-2*max_veh_speed, 1, 742 + 6, 2):
+                        if not self.is_any_vehicle_there(742 - 2 * max_veh_speed, 1, 742 + 6, 2):
                             self.move_car(x, 0, new_x, 3)
                     elif self.cars[x][0].will_turn and new_x <= 660:
-                        if not self.is_any_vehicle_there(660 - 2*max_veh_speed, 1, 660 + 6, 2):
+                        if not self.is_any_vehicle_there(660 - 2 * max_veh_speed, 1, 660 + 6, 2):
                             self.move_car(x, 0, 660, 3)
                         else:
                             self.move_car(x, 0, 660, 0)
@@ -267,9 +277,9 @@ class Engine:
             car.position = (car.position[0], 34)
             return
         can_turn_right = True
-        if self.is_occupied(car.position[0]+1, 27) or self.is_occupied(car.position[0]+1, 33):
+        if self.is_occupied(car.position[0] + 1, 27) or self.is_occupied(car.position[0] + 1, 33):
             return
-        for i in range(0, 3*max_veh_speed):
+        for i in range(0, 3 * max_veh_speed):
             if is_vehicle(self.cars[car.position[0] - i][2]) or is_vehicle(self.cars[car.position[0] - i][1]):
                 can_turn_right = False
                 break
@@ -282,9 +292,9 @@ class Engine:
                 car.position = (car.position[0], car.position[1] - 10)
             return
         can_turn_left = True
-        if self.is_occupied(car.position[0]-1, 15):
+        if self.is_occupied(car.position[0] - 1, 15):
             return
-        for i in range(0, 3*max_veh_speed):
+        for i in range(0, 3 * max_veh_speed):
             if is_vehicle(self.cars[car.position[0] + i][0]):
                 can_turn_left = False
                 break
@@ -355,8 +365,14 @@ class Engine:
                     area.car_closed = True
                 if randint(1, 2) == 1:
                     area.spawn_pedestrian_up()
+                    self.pedestrian_info[0] += 1
+                    self.pedestrian_info[1] += (
+                                Engine.crossing_open_duration - self.iter_counter // Engine.crossing_open_duration)
                 else:
                     area.spawn_pedestrian_down()
+                    self.pedestrian_info[0] += 1
+                    self.pedestrian_info[1] += (
+                            Engine.crossing_open_duration - self.iter_counter // Engine.crossing_open_duration)
 
     def move_pedestrians(self):
 
