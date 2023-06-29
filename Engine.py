@@ -30,6 +30,7 @@ class Engine:
         self.ak_to_spawn = queue.Queue()
         self.pedestrian_areas = pedestrian_arreas
         self.cars = [[0 for _ in range(3)] for i in range(self.map_w)]
+        self.lights_mode = 0
         two_lanes = [(0, 263), (613, 657), (1168, 1215)]
         crossings = [(230,255),(622,645),(1181,1202)] #wspolrzedne przejsc z map0
         for tup in two_lanes:
@@ -141,6 +142,13 @@ class Engine:
                 self.add_car(Car(initial_pos, self.cars))
 
     def traffic_lights_crossing(self):
+        match self.lights_mode:
+            case 0:
+                pass   # todo implement light change after button clicking
+            case 1:
+                pass   # todo implement light change coordinated with AK lights
+            case 2:
+                pass   # todo move code from below here
         # stale (ilosc iteracji po ktorych nastepuje zmiana)
         crossing_open_duration = 40
         crossing_close_duration = 20
