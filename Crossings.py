@@ -81,7 +81,6 @@ class PedestrianCrossing:
         self.update_speed()
         self.move()
 
-
         if not self.is_anyone_at_crossing() and self.car_closed:
             self.pedestrian_end = True
             # self.pedestrian_end = True
@@ -92,15 +91,3 @@ class PedestrianCrossing:
             # self.pedestrian_end = False
             self.car_closed = False
             self.spawn_delay = self.max_spawn_delay
-
-class Crossing:
-    """
-    obiekt - przejscie dla pieszych, ustawia sie w nim czy przejscie jest otwrte czy zamkanięte
-    (open == true -> auto moze jechac)
-
-    Prawdopodobnie zamienic na obiekty klasy PedastrainCrossing
-    """
-
-    def __init__(self, position: (int, int), open: bool):
-        self.position = position
-        self.open = open

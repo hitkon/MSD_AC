@@ -146,9 +146,12 @@ class Engine:
             case 0:
                 pass   # todo implement light change after button clicking
             case 1:
-                pass   # todo implement light change coordinated with AK lights
+                self.crossing_AK_coordinated()
+                return
             case 2:
                 pass   # todo move code from below here
+            case 3:
+                pass   # todo implement no lights at this crossing
         # stale (ilosc iteracji po ktorych nastepuje zmiana)
         crossing_open_duration = 40
         crossing_close_duration = 20
@@ -168,6 +171,24 @@ class Engine:
                 for j in range(14, 34):
                     if self.map[i][j] == 6:  # crossing_close
                         self.map[i][j] = 3  # crossing
+
+    def paint_lights_crossing(self, color_from: int, color_to: int):
+        # 3 - green, 6 - red
+        if (color_from != 3 and color_from != 6) or (color_to != 3 and color_to != 6):
+            raise Exception("Cannot paint crossing into other color than red or green")
+        for i in range(229, 255):
+            for j in range(14, 34):
+                if self.map[i][j] == color_from:  # crossing
+                    self.map[i][j] = color_to  # crossing_close
+
+    def crossing_AK_coordinated(self):
+        phase = self.iter_counter % 120
+        if phase < 100 and not self.crossing_closed:
+            self.crossing_closed = True
+            self.paint_lights_crossing(3, 6)
+        elif phase == 100:
+            self.crossing_closed = False
+            self.paint_lights_crossing(6, 3)
 
     def iteration(self):
         self.spawn_cars()
@@ -348,7 +369,7 @@ class Engine:
         pos = map_pos_to_arr_ind(vehicle.position)
         self.cars[pos[0]][pos[1]] = vehicle
 
-    def can_pass_crossing(self, crossing_num: int) -> bool:   # todo
+    def can_pass_crossing(self, crossing_num: int) -> bool:
         # 0 - crossing with lights, 1 - crossing near Budryka, 2 - crossing near D17
         if crossing_num < 0 or crossing_num > 2:
             raise Exception("Wrong crossing number")

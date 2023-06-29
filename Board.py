@@ -21,7 +21,7 @@ class Board:
         self.legend_labels = ["Legend:", "Pavement", "Road", "Crossing", "Vehicle", "Pedestrian", "Crossing closed"]
         self.speed_cont_vals = [1, 2, 3, 4, 5, 10, 25, 50, 100]
         self.chosen_speed = 0  # index of array above
-        self.light_modes_labels = ["Original", "Crossing synch", "Time loop"]
+        self.light_modes_labels = ["Original", "Crossing synch", "Time loop", "No lights"]
         self.chosen_mode = 0   # index of array above
         self.modes_buttons_cords = []
         self.speed_cont_x = 600
@@ -80,14 +80,14 @@ class Board:
                                                                           40 + 30 * ((i-1) % elems_in_col), 20, 20))
 
     def create_speed_control(self):
-        self.sub_screen.blit(self.font.render("Simulation speed", True, (0, 0, 0)), [self.speed_cont_x, 10])
+        self.sub_screen.blit(self.font.render("Simulation speed:", True, (0, 0, 0)), [self.speed_cont_x, 10])
         counter = self.speed_cont_x
         for i in self.speed_cont_vals:
             self.sub_screen.blit(self.font.render(str(i), True, (0, 0, 0)), [counter, 70])
             counter += 30
 
     def create_light_modes(self):
-        self.sub_screen.blit(self.font.render("Lights mode", True, (0, 0, 0)), [self.speed_cont_x, 120])
+        self.sub_screen.blit(self.font.render("Lights mode:", True, (0, 0, 0)), [self.speed_cont_x, 120])
         counter = self.speed_cont_x
         for label in self.light_modes_labels:
             self.sub_screen.blit(self.font.render(label, True, (0, 0, 0)), [counter, 180])
@@ -124,9 +124,7 @@ class Board:
         self.create_legend()
         self.create_speed_control()
         self.create_light_modes()
-        #self.total_width = self.map_w * self.cell_size
         self.total_width = 2190
-        # self.scrollbar_width = self.total_width /
         self.scrollbar_mult = (self.total_width - self.main_window_width) / (
                     self.main_window_width - self.scrollbar_width)
         self.main_loop()
