@@ -1,4 +1,3 @@
-import copy
 import queue
 from collections import namedtuple
 from Participants import *
@@ -19,7 +18,7 @@ class Engine:
     crossing_open_duration = 40
     crossing_close_duration = 20
 
-    def __init__(self, map: list, pedestrian_arreas: list):
+    def __init__(self, map: list, pedestrian_areas: list):
         self.map_w = len(map)
         self.map_h = len(map[0])
         self.map = map
@@ -29,20 +28,25 @@ class Engine:
         self.kawiory_cars = [[], []]
         self.kijowska_to_spawn = queue.Queue()
         self.ak_to_spawn = queue.Queue()
-        self.pedestrian_areas = pedestrian_arreas
+        self.pedestrian_areas = pedestrian_areas
         self.cars = [[0 for _ in range(3)] for i in range(self.map_w)]
         self.lights_mode = 0
-        self.pedestrian_info = [0, 0]
+        self.save_stats_every = 20              # number of iterations after which statistics are saved to the file
+        self.cars_passed_crossing = 0           # counting cars for statistics
+        self.cars_waiting_iters = 0             # counting sum of waiting time for statistics
+        self.pedestrians_passed_crossing = 0    # counting pedestrians for statistics
+        self.pedestrians_waiting_iters = 0      # counting sum of waiting time for statistics
+        self.stats_file_name = "stats.csv"
         two_lanes = [(0, 263), (613, 657), (1168, 1215)]
         crossings = [(230, 255), (622, 645), (1181, 1202)]  # wspolrzedne przejsc z map0
         for tup in two_lanes:
             for i in range(tup[0], tup[1]):
                 self.cars[i][1] = None
 
-
-        with open("history.csv", "w",newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Amount of pedestrians", "Sum of their iteration waiting"])
+        with open(self.stats_file_name, "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["Iteration number", "Cars amount", "Sum of waiting time for cars", "Pedestrians amount",
+                             "Sum of waiting time for pedestrians"])
 
     def is_any_vehicle_there(self, x_from: int, y_from: int, x_to: int, y_to: int) -> bool:
         for x in range(x_from, x_to + 1):
@@ -177,11 +181,6 @@ class Engine:
                     if self.map[i][j] == 6:  # crossing_close
                         self.map[i][j] = 3  # crossing
 
-            with open("history.csv", "a", newline="") as f:
-                writer = csv.writer(f)
-                writer.writerow(self.pedestrian_info)
-            self.pedestrian_info = [0,0]
-
     def paint_lights_crossing(self, color_from: int, color_to: int):
         # 3 - green, 6 - red
         if (color_from != 3 and color_from != 6) or (color_to != 3 and color_to != 6):
@@ -206,6 +205,7 @@ class Engine:
         self.spawn_pedestrians()
         self.move_pedestrians()
         self.move_cars()
+        self.update_stats_file()
         self.iter_counter += 1
 
     def move_cars(self):
@@ -214,6 +214,10 @@ class Engine:
             for y in range(len(cars_copy[x])):
                 if is_vehicle(cars_copy[x][y]):
                     self.cars[x][y].set_speed()
+                    if y == 0 and 254 <= x <= 500 and self.cars[x][y].speed < 5 and not self.crossing_closed:
+                        self.cars_waiting_iters += 1
+                    elif y != 0 and 20 <= x <= 230 and self.cars[x][y].speed < 5 and not self.crossing_closed:
+                        self.cars_waiting_iters += 1
         for x in range(self.map_w):
             if is_vehicle(cars_copy[x][0]):
                 new_x = x - self.cars[x][0].speed
@@ -329,6 +333,8 @@ class Engine:
             self.cars[x_from][y_from].position = (x_to, 34)
             self.cars[x_from][y_from] = 0
             return
+        if x_to <= 230 < x_from or x_from <= 230 < x_to:
+            self.cars_passed_crossing += 1
         if y_to == y_from:
             self.cars[x_from][y_from].position = (x_to, self.cars[x_from][y_to].position[1])
         elif y_to == 2:
@@ -365,19 +371,16 @@ class Engine:
                     area.car_closed = True
                 if randint(1, 2) == 1:
                     area.spawn_pedestrian_up()
-                    self.pedestrian_info[0] += 1
-                    self.pedestrian_info[1] += (
-                                Engine.crossing_open_duration - self.iter_counter // Engine.crossing_open_duration)
                 else:
                     area.spawn_pedestrian_down()
-                    self.pedestrian_info[0] += 1
-                    self.pedestrian_info[1] += (
-                            Engine.crossing_open_duration - self.iter_counter // Engine.crossing_open_duration)
+                if area.width_range[0] == 230:
+                    self.pedestrians_passed_crossing += 1
 
     def move_pedestrians(self):
 
         for area in self.pedestrian_areas:
             if area.type == 1 and self.crossing_closed:
+                self.pedestrians_waiting_iters += area.get_pedestrians_number()
                 continue
             area.iterate()
 
@@ -394,3 +397,9 @@ class Engine:
         if crossing_num != 0 and not self.pedestrian_areas[crossing_num].car_closed:
             return True
         return False
+
+    def update_stats_file(self):
+        if self.iter_counter % self.save_stats_every == 0:
+            with open(self.stats_file_name, "a") as file:
+                file.write(f"{self.iter_counter},{self.cars_passed_crossing},{self.cars_waiting_iters},"
+                           f"{self.pedestrians_passed_crossing},{self.pedestrians_waiting_iters}\n")

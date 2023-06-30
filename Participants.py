@@ -146,11 +146,18 @@ class RoadVehicle:
         if self.speed >= distance_to_obstacle:
             self.speed = max(min(self.speed - self.acceleration, distance_to_obstacle-1), 0)
 
+    def avoid_crossing_stay(self):
+        if 230 <= self.position[0] + self.speed <= 254:
+            for i in range(max_veh_len + self.length):
+                if is_vehicle(self.map[254 + i][2]) and self.map[254 + i][2].speed < 6:
+                    self.speed = max(230-self.position[0], 0)
+
     def set_speed(self):
         self.update_will_switch()
         dist = min(self.distance_to_moving_obstacle(), self.distance_to_static_obstacle()//2 + 1)
         self.accelerate(dist)
         self.brake(dist)
+        self.avoid_crossing_stay()
 
 
 class Car(RoadVehicle):

@@ -6,7 +6,7 @@ from Participants import Pedestrian
 class PedestrianCrossing:
     def __init__(self, width_range, up_spawn_range, down_spawn_range, type, spawn_prob):
         self.spawn_prob = spawn_prob
-        self.type = type
+        self.type = type                  # 0 for crossing without lights, 1 for crossing with lights
         self.width_range = width_range
         self.up_spawn_range = up_spawn_range
         self.down_spawn_range = down_spawn_range
@@ -91,3 +91,10 @@ class PedestrianCrossing:
             # self.pedestrian_end = False
             self.car_closed = False
             self.spawn_delay = self.max_spawn_delay
+
+    def get_pedestrians_number(self):
+        counter = 0
+        for x in range(self.total_width):
+            for y in range(self.total_height):
+                counter += len(self.map[x][y])
+        return counter
