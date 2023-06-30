@@ -4,7 +4,7 @@ import Engine
 
 
 class Board:
-    def __init__(self):
+    def __init__(self, initial_lights_mode=0, initial_simulation_speed=0, end_after=None, display_needed=True):
         self.pedestrian_areas = []
         self.total_width = None
         pygame.init()
@@ -20,9 +20,9 @@ class Board:
         self.legend_elems = []
         self.legend_labels = ["Legend:", "Pavement", "Road", "Crossing", "Vehicle", "Pedestrian", "Crossing closed"]
         self.speed_cont_vals = [1, 2, 3, 4, 5, 10, 25, 50, 100]
-        self.chosen_speed = 0  # index of array above
+        self.chosen_speed = initial_simulation_speed  # index of array above
         self.light_modes_labels = ["Original", "Crossing synch", "Time loop", "No lights"]
-        self.chosen_mode = 0   # index of array above
+        self.chosen_mode = initial_lights_mode        # index of array above
         self.modes_buttons_cords = []
         self.speed_cont_x = 600
         self.button_width = 15
@@ -39,6 +39,8 @@ class Board:
         self.scrollbar_pressed = False
         self.scrollbar_mult = 0
         self.engine = None
+        self.end_after = end_after
+        self.display_needed = display_needed
 
     def load_pedestrian_spawn_points(self):
         with open("map/people_spawn_points0.txt") as f:
@@ -116,14 +118,15 @@ class Board:
     def start(self):
         self.init_map()
         self.load_pedestrian_spawn_points()
-        self.engine = Engine.Engine(self.map, self.pedestrian_areas)
+        self.engine = Engine.Engine(self.map, self.pedestrian_areas, self.chosen_mode)
         Engine.RoadVehicle.engine = self.engine
-        self.main_screen = pygame.display.set_mode(self.main_window_size)
-        self.sub_screen = pygame.Surface(self.sub_window_size)
-        self.sub_screen.fill((255, 255, 255))
-        self.create_legend()
-        self.create_speed_control()
-        self.create_light_modes()
+        if self.display_needed:
+            self.main_screen = pygame.display.set_mode(self.main_window_size)
+            self.sub_screen = pygame.Surface(self.sub_window_size)
+            self.sub_screen.fill((255, 255, 255))
+            self.create_legend()
+            self.create_speed_control()
+            self.create_light_modes()
         self.total_width = 2190
         self.scrollbar_mult = (self.total_width - self.main_window_width) / (
                     self.main_window_width - self.scrollbar_width)
@@ -236,6 +239,13 @@ class Board:
         iteration_interval = 1000  # Time between iterations in ms
         elapsed_time = 0
         while True:
+            if self.end_after is not None and self.engine.iter_counter >= self.end_after:
+                pygame.quit()
+                break
+                # sys.exit()
+            if not self.display_needed:
+                self.engine.iteration()
+                continue
             delta_time = self.clock.tick()
             elapsed_time += delta_time
             for event in pygame.event.get():

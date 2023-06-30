@@ -18,7 +18,7 @@ class Engine:
     crossing_open_duration = 40
     crossing_close_duration = 20
 
-    def __init__(self, map: list, pedestrian_areas: list):
+    def __init__(self, map: list, pedestrian_areas: list, lights_mode: int):
         self.map_w = len(map)
         self.map_h = len(map[0])
         self.map = map
@@ -30,7 +30,7 @@ class Engine:
         self.ak_to_spawn = queue.Queue()
         self.pedestrian_areas = pedestrian_areas
         self.cars = [[0 for _ in range(3)] for i in range(self.map_w)]
-        self.lights_mode = 0
+        self.lights_mode = lights_mode
         self.save_stats_every = 20              # number of iterations after which statistics are saved to the file
         self.cars_passed_crossing = 0           # counting cars for statistics
         self.cars_waiting_iters = 0             # counting sum of waiting time for statistics
