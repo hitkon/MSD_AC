@@ -24,9 +24,10 @@ def draw_charts():
         tmp.fill(init_time_pedestrians)
         pedestrians_time = df.iloc[:, 4].to_numpy() - tmp
         fig, ax = plt.subplots()
-        ax.plot(x[1:], [cars_time[j]/cars_num[j] for j in range(1, len(cars_num))], label="Average waiting time for car")
-        ax.plot(x[1:], [pedestrians_time[j]/pedestrians_num[j] for j in range(1, len(pedestrians_num))],
-                label="Average waiting time for pedestrian", c="red")
+        ax.plot(x[1:], [cars_time[j]/cars_num[j] if cars_num[j] != 0 else 0 for j in range(1, len(cars_num))],
+                label="Average waiting time for car")
+        ax.plot(x[1:], [pedestrians_time[j]/pedestrians_num[j] if pedestrians_num[j] != 0 else 0
+                        for j in range(1, len(pedestrians_num))], label="Average waiting time for pedestrian", c="red")
         ax.grid()
         ax.legend()
         ax.set_title(f"Average waiting times for two groups\non the pedestrian crossing - {light_modes_labels[i]} mode")
