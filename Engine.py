@@ -26,7 +26,10 @@ class Engine:
         self.iter_counter = 0
         self.budryka_cars = [[], []]
         self.kawiory_cars = [[], []]
-        self.lights_loop = []
+        self.lights_loop = [20, 60, 20,  40, 20, 50, 20, 60, 80, 10]
+        self.loop_max_timestapm = None
+        self.loop_timestapm = []
+        self.loop_lights_state = None
         self.kijowska_to_spawn = queue.Queue()
         self.ak_to_spawn = queue.Queue()
         self.pedestrian_areas = pedestrian_areas
@@ -40,6 +43,7 @@ class Engine:
         self.stats_file_name = "stats.csv"
         two_lanes = [(0, 263), (613, 657), (1168, 1215)]
         crossings = [(230, 255), (622, 645), (1181, 1202)]  # wspolrzedne przejsc z map0
+        self.crossing_loop_init()
         for tup in two_lanes:
             for i in range(tup[0], tup[1]):
                 self.cars[i][1] = None
@@ -163,10 +167,33 @@ class Engine:
                 self.crossing_AK_coordinated()
                 return
             case 2:
+                self.pedestrian_areas[0].typee = 1
                 pass  # todo move code from below here
             case 3:
                 self.pedestrian_areas[0].type = 0
                 pass  # todo implement no lights at this crossing
+    def crossing_loop(self):
+        phase = self.iter_counter % self.loop_max_timestapm
+        for stamp in self.loop_timestapm:
+            if stamp[0] == phase:
+                self.loop_lights_state = stamp[1]
+        if self.loop_lights_state == 0:
+            self.crossing_closed = False
+            self.paint_lights_crossing(6, 3)
+        else:
+            self.crossing_closed = True
+            self.paint_lights_crossing(3, 6)
+
+    def crossing_loop_init(self):
+        stamp = 0
+        self.loop_timestapm.append((stamp, 0))
+        for elem in self.lights_loop:
+            stamp+=elem
+            self.loop_timestapm.append((stamp, 1))
+            stamp+=10
+            self.loop_timestapm.append((stamp, 0))
+        self.loop_max_timestapm = self.loop_timestapm[-1][0]
+
 
     def traffic_lights_crossing(self):
         match self.lights_mode:
@@ -176,7 +203,7 @@ class Engine:
                 self.crossing_AK_coordinated()
                 return
             case 2:
-
+                self.crossing_loop()
                 pass   # todo move code from below here
             case 3:
                 self.crossing_closed = False
