@@ -98,3 +98,8 @@ class PedestrianCrossing:
             for y in range(self.total_height):
                 counter += len(self.map[x][y])
         return counter
+
+    def clear(self):
+        for x in range(self.total_width):
+            for y in range(self.total_height):
+                self.map[x][y] = []

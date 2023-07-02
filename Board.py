@@ -152,6 +152,7 @@ class Board:
         for i in range(len(self.modes_buttons_cords)):
             if self.modes_buttons_cords[i][0] + self.button_width >= event.pos[0]:
                 self.chosen_mode = i
+                #self.engine = Engine.Engine(self.map, self.pedestrian_areas, self.chosen_mode)
                 self.engine.change_lights_mod(i)
                 return
 
