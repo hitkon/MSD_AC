@@ -26,6 +26,7 @@ class Engine:
         self.iter_counter = 0
         self.budryka_cars = [[], []]
         self.kawiory_cars = [[], []]
+        self.lights_loop = []
         self.kijowska_to_spawn = queue.Queue()
         self.ak_to_spawn = queue.Queue()
         self.pedestrian_areas = pedestrian_areas
@@ -152,6 +153,21 @@ class Engine:
             if rand_with_probability(prob_piastowska_spawn):
                 self.add_car(Car(initial_pos, self.cars))
 
+    def change_lights_mod(self, i):
+        self.lights_mode = i
+        match self.lights_mode:
+            case 0:
+                pass  # todo implement light change after button clicking
+            case 1:
+                self.pedestrian_areas[0].typee = 1
+                self.crossing_AK_coordinated()
+                return
+            case 2:
+                pass  # todo move code from below here
+            case 3:
+                self.pedestrian_areas[0].type = 0
+                pass  # todo implement no lights at this crossing
+
     def traffic_lights_crossing(self):
         match self.lights_mode:
             case 0:
@@ -160,9 +176,13 @@ class Engine:
                 self.crossing_AK_coordinated()
                 return
             case 2:
+
                 pass   # todo move code from below here
             case 3:
-                pass   # todo implement no lights at this crossing
+                self.crossing_closed = False
+                self.paint_lights_crossing(6, 3)
+                return
+
         # stale (ilosc iteracji po ktorych nastepuje zmiana)
 
         if self.crossing_closed is False and \
@@ -376,6 +396,7 @@ class Engine:
                 if area.width_range[0] == 230:
                     self.pedestrians_passed_crossing += 1
 
+
     def move_pedestrians(self):
 
         for area in self.pedestrian_areas:
@@ -392,9 +413,9 @@ class Engine:
         # 0 - crossing with lights, 1 - crossing near Budryka, 2 - crossing near D17
         if crossing_num < 0 or crossing_num > 2:
             raise Exception("Wrong crossing number")
-        if crossing_num == 0 and self.crossing_closed:
+        if self.pedestrian_areas[crossing_num].type == 1 and self.crossing_closed:
             return True
-        if crossing_num != 0 and not self.pedestrian_areas[crossing_num].car_closed:
+        if self.pedestrian_areas[crossing_num].type == 0 and not self.pedestrian_areas[crossing_num].car_closed:
             return True
         return False
 
