@@ -103,3 +103,9 @@ class PedestrianCrossing:
         for x in range(self.total_width):
             for y in range(self.total_height):
                 self.map[x][y] = []
+
+    def clear_road(self):
+        for x in range(self.total_width):
+            for y in range(self.up_spawn_range[1] - self.up_spawn_range[0], self.down_spawn_range[0] - self.up_spawn_range[0]):
+                self.map[x][y] = []
+

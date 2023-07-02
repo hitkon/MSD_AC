@@ -166,14 +166,17 @@ class Engine:
         self.lights_mode = i
         match self.lights_mode:
             case 0:
-                self.pedestrian_areas[0].typee = 1
+                self.pedestrian_areas[0].clear_road()
+                self.pedestrian_areas[0].type = 1
                 return
             case 1:
-                self.pedestrian_areas[0].typee = 1
+                self.pedestrian_areas[0].clear_road()
+                self.pedestrian_areas[0].type = 1
                 self.crossing_AK_coordinated()
                 return
             case 2:
-                self.pedestrian_areas[0].typee = 1
+                self.pedestrian_areas[0].clear_road()
+                self.pedestrian_areas[0].type = 1
                 return
             case 3:
                 self.pedestrian_areas[0].type = 0
