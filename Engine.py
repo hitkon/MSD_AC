@@ -26,7 +26,7 @@ class Engine:
         self.iter_counter = 0
         self.budryka_cars = [[], []]
         self.kawiory_cars = [[], []]
-        self.lights_loop = [20, 60, 20,  40, 20, 50, 20, 60, 80, 10]
+        self.lights_loop = [20, 60, 20, 40, 20, 50, 20, 60, 80, 10]
         self.loop_max_timestapm = None
         self.loop_timestapm = []
         self.loop_lights_state = None
@@ -35,11 +35,11 @@ class Engine:
         self.pedestrian_areas = pedestrian_areas
         self.cars = [[0 for _ in range(3)] for i in range(self.map_w)]
         self.lights_mode = lights_mode
-        self.save_stats_every = 20              # number of iterations after which statistics are saved to the file
-        self.cars_passed_crossing = 0           # counting cars for statistics
-        self.cars_waiting_iters = 0             # counting sum of waiting time for statistics
-        self.pedestrians_passed_crossing = 0    # counting pedestrians for statistics
-        self.pedestrians_waiting_iters = 0      # counting sum of waiting time for statistics
+        self.save_stats_every = 20  # number of iterations after which statistics are saved to the file
+        self.cars_passed_crossing = 0  # counting cars for statistics
+        self.cars_waiting_iters = 0  # counting sum of waiting time for statistics
+        self.pedestrians_passed_crossing = 0  # counting pedestrians for statistics
+        self.pedestrians_waiting_iters = 0  # counting sum of waiting time for statistics
         self.stats_file_name = "stats.csv"
         two_lanes = [(0, 263), (613, 657), (1168, 1215)]
         crossings = [(230, 255), (622, 645), (1181, 1202)]  # wspolrzedne przejsc z map0
@@ -58,6 +58,7 @@ class Engine:
     def clear_pedestrians(self):
         for area in self.pedestrian_areas:
             area.clear()
+
     def is_any_vehicle_there(self, x_from: int, y_from: int, x_to: int, y_to: int) -> bool:
         for x in range(x_from, x_to + 1):
             for y in range(y_from, y_to + 1):
@@ -181,6 +182,7 @@ class Engine:
             case 3:
                 self.pedestrian_areas[0].type = 0
                 return
+
     def crossing_loop(self):
         phase = self.iter_counter % self.loop_max_timestapm
         for stamp in self.loop_timestapm:
@@ -197,19 +199,17 @@ class Engine:
         stamp = 0
         self.loop_timestapm.append((stamp, 0))
         for elem in self.lights_loop:
-            stamp+=elem
+            stamp += elem
             self.loop_timestapm.append((stamp, 1))
-            stamp+=15
+            stamp += 15
             self.loop_timestapm.append((stamp, 0))
         self.loop_max_timestapm = self.loop_timestapm[-1][0]
-
 
     def traffic_lights_crossing(self):
         match self.lights_mode:
             case 0:
                 self.crossing_loop()
                 return
-                #pass
             case 1:
                 self.crossing_AK_coordinated()
                 return
@@ -220,23 +220,15 @@ class Engine:
                 self.paint_lights_crossing(6, 3)
                 return
 
-        # stale (ilosc iteracji po ktorych nastepuje zmiana)
-
         if self.crossing_closed is False and \
                 self.iter_counter % (Engine.crossing_close_duration + Engine.crossing_open_duration) == 0:
             self.crossing_closed = True
-            for i in range(229, 255):
-                for j in range(14, 34):
-                    if self.map[i][j] == 3:  # crossing
-                        self.map[i][j] = 6  # crossing_close
+            self.paint_lights_crossing(3, 6)
 
         if self.crossing_closed is True and self.iter_counter % (
                 Engine.crossing_close_duration + Engine.crossing_open_duration) == Engine.crossing_open_duration:
             self.crossing_closed = False
-            for i in range(229, 255):
-                for j in range(14, 34):
-                    if self.map[i][j] == 6:  # crossing_close
-                        self.map[i][j] = 3  # crossing
+            self.paint_lights_crossing(6, 3)
 
     def paint_lights_crossing(self, color_from: int, color_to: int):
         # 3 - green, 6 - red
@@ -418,10 +410,6 @@ class Engine:
                     continue
                 area.pedestrian_end = False
                 area.end_delay = area.max_end_delay
-                # area.spawn_delay = area.max_delay
-                # area.spawn_delay -= 1
-                # continue
-                # continue
 
             if randint(0, 100) <= area.spawn_prob:
                 if area.type == 0:
@@ -432,7 +420,6 @@ class Engine:
                     area.spawn_pedestrian_down()
                 if area.width_range[0] == 230:
                     self.pedestrians_passed_crossing += 1
-
 
     def move_pedestrians(self):
 

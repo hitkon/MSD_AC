@@ -24,7 +24,6 @@ max_veh_speed = 28
 
 
 class RoadVehicle:
-
     look_ahead_variable = 30
     engine = None
 
@@ -36,15 +35,15 @@ class RoadVehicle:
         self.map = map
         self.preferred_lane = 'l'  # 'l' for left, 'r' for right
         self.will_switch = False
-        self.iters_to_wait = 25    # how much time does a bus need to wait on a bus stop
+        self.iters_to_wait = 25  # how much time does a bus need to wait on a bus stop
         self.will_turn = False
-        self.chosen_route = 0      # for choosing Budryka/Kawiory (0/1) turn
+        self.chosen_route = 0  # for choosing Budryka/Kawiory (0/1) turn
         self.acceleration = 0
         self.width = 0
         self.length = 0
-        self.max_speed = 28        # 50km/h = 14m/s
-        self.can_turn = False      # True if the vehicle can turn on the crossings
-        self.stops = False         # True if the vehicle stops at the bus stop
+        self.max_speed = 28  # 50km/h = 14m/s
+        self.can_turn = False  # True if the vehicle can turn on the crossings
+        self.stops = False  # True if the vehicle stops at the bus stop
 
     def distance_to_static_obstacle(self) -> int:
         x, y = map_pos_to_arr_ind(self.position)
@@ -85,15 +84,15 @@ class RoadVehicle:
             for i in range(1, self.speed + self.acceleration + 1 + max_veh_len):
                 if x - i < 0:
                     return self.speed + self.acceleration + 1 + max_veh_len
-                if is_vehicle(self.map[x-i][y]):
-                    return i - self.map[x-i][y].length
+                if is_vehicle(self.map[x - i][y]):
+                    return i - self.map[x - i][y].length
         else:
             found_so_far = self.speed + self.acceleration + 1 + max_veh_len
             for i in range(1, self.speed + self.acceleration + 1 + max_veh_len):
-                if x+i >= len(self.map):
+                if x + i >= len(self.map):
                     break
-                if is_vehicle(self.map[x+i][y]):
-                    found_so_far = i - self.map[x+i][y].length
+                if is_vehicle(self.map[x + i][y]):
+                    found_so_far = i - self.map[x + i][y].length
                     break
             if self.will_switch:
                 if y == 1:
@@ -101,15 +100,15 @@ class RoadVehicle:
                 else:
                     y -= 1
                 for i in range(0, -max_veh_speed, -1):
-                    if x+i >= 0 and self.map[x+i][y] is None:
+                    if x + i >= 0 and self.map[x + i][y] is None:
                         break
-                    if x+i >= 0 and is_vehicle(self.map[x+i][y]):
+                    if x + i >= 0 and is_vehicle(self.map[x + i][y]):
                         return 0
                 for i in range(1, self.speed + self.acceleration + 1 + max_veh_len):
-                    if x+i >= len(self.map):
+                    if x + i >= len(self.map):
                         return min(self.speed + self.acceleration + 1 + max_veh_len, found_so_far)
-                    if x+i >= 0 and is_vehicle(self.map[x+i][y]):
-                        return min(i - self.map[x+i][y].length, found_so_far)
+                    if x + i >= 0 and is_vehicle(self.map[x + i][y]):
+                        return min(i - self.map[x + i][y].length, found_so_far)
                 return found_so_far
             else:
                 return found_so_far
@@ -126,7 +125,7 @@ class RoadVehicle:
             for i in range(1, self.speed + self.acceleration + 1):
                 if x + i >= len(self.map):
                     return
-                if self.map[x+i][y] is None:
+                if self.map[x + i][y] is None:
                     self.will_switch = True
                     return
             return
@@ -134,7 +133,7 @@ class RoadVehicle:
             for i in range(1, self.speed + self.acceleration + 1):
                 if x + i > len(self.map):
                     return
-                if self.map[x+i][y-1] is not None:
+                if self.map[x + i][y - 1] is not None:
                     self.will_switch = True
                     return
 
@@ -144,17 +143,18 @@ class RoadVehicle:
 
     def brake(self, distance_to_obstacle):
         if self.speed >= distance_to_obstacle:
-            self.speed = max(min(self.speed - self.acceleration, distance_to_obstacle-1), 0)
+            self.speed = max(min(self.speed - self.acceleration, distance_to_obstacle - 1), 0)
 
     def avoid_crossing_stay(self):
-        if 230 <= self.position[0] + self.speed <= 254:
+        x, y = map_pos_to_arr_ind(self.position)
+        if 230 <= x + self.speed <= 254 and y > 0:
             for i in range(max_veh_len + self.length):
                 if is_vehicle(self.map[254 + i][2]) and self.map[254 + i][2].speed < 6:
-                    self.speed = max(230-self.position[0], 0)
+                    self.speed = max(230 - self.position[0], 0)
 
     def set_speed(self):
         self.update_will_switch()
-        dist = min(self.distance_to_moving_obstacle(), self.distance_to_static_obstacle()//2 + 1)
+        dist = min(self.distance_to_moving_obstacle(), self.distance_to_static_obstacle() // 2 + 1)
         self.accelerate(dist)
         self.brake(dist)
         self.avoid_crossing_stay()
@@ -184,7 +184,7 @@ class Bus(RoadVehicle):
         self.max_speed = 24
 
 
-class BigBus(RoadVehicle):  # coach in documentation
+class BigBus(RoadVehicle):
     def __init__(self, position, map):
         super().__init__(position, map)
         self.acceleration = 3
@@ -224,16 +224,3 @@ class Pedestrian:
     def __init__(self, position, direction):
         self.position = position
         self.direction = direction
-
-
-class Bicycle:
-    width = 2
-    length = 4
-    speed = 0
-    max_speed = 6
-
-    def __init__(self, position):
-        self.position = position
-
-
-

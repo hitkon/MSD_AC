@@ -22,14 +22,15 @@ class Board:
         self.speed_cont_vals = [1, 2, 3, 4, 5, 10, 25, 50, 100]
         self.chosen_speed = initial_simulation_speed  # index of array above
         self.light_modes_labels = ["Original", "Crossing synch", "Time loop", "No lights"]
-        self.chosen_mode = initial_lights_mode        # index of array above
+        self.chosen_mode = initial_lights_mode  # index of array above
         self.modes_buttons_cords = []
         self.speed_cont_x = 600
         self.button_width = 15
         self.map = []
         self.map_h, self.map_w = 0, 0
         # colors_ids: 0 - not usable, 1 - pavement, 2 - road, 3 - crossing, 4 - vehicle, 5 - pedestrian, 6 - crossing_closed
-        self.colors = [(255, 255, 255), (155, 155, 155), (0, 0, 102), (0, 102, 51), (255, 255, 102), (0, 0, 0), (255, 0, 0)]
+        self.colors = [(255, 255, 255), (155, 155, 155), (0, 0, 102), (0, 102, 51), (255, 255, 102), (0, 0, 0),
+                       (255, 0, 0)]
         self.cell_size = 3
         self.scroll_vel = 4
         self.font = pygame.font.Font(None, 30)
@@ -74,12 +75,12 @@ class Board:
             self.legend_elems.append(self.font.render(label, True, (0, 0, 0)))
             self.sub_screen.blit(self.legend_elems[-1], counter)
             counter[1] += 30
-            if counter[1] > (elems_in_col+1)*30:
+            if counter[1] > (elems_in_col + 1) * 30:
                 counter[0] += spacing
                 counter[1] = 40
         for i in range(1, len(self.legend_elems)):
-            pygame.draw.rect(self.sub_screen, self.colors[i], pygame.Rect(180 + spacing*((i-1)//elems_in_col),
-                                                                          40 + 30 * ((i-1) % elems_in_col), 20, 20))
+            pygame.draw.rect(self.sub_screen, self.colors[i], pygame.Rect(180 + spacing * ((i - 1) // elems_in_col),
+                                                                          40 + 30 * ((i - 1) % elems_in_col), 20, 20))
 
     def create_speed_control(self):
         self.sub_screen.blit(self.font.render("Simulation speed:", True, (0, 0, 0)), [self.speed_cont_x, 10])
@@ -93,8 +94,8 @@ class Board:
         counter = self.speed_cont_x
         for label in self.light_modes_labels:
             self.sub_screen.blit(self.font.render(label, True, (0, 0, 0)), [counter, 180])
-            self.modes_buttons_cords.append((counter + len(label)*6, 150))
-            counter += len(label)*12
+            self.modes_buttons_cords.append((counter + len(label) * 6, 150))
+            counter += len(label) * 12
 
     def is_click_inside_scrollbar(self, event) -> bool:
         return (
@@ -104,9 +105,9 @@ class Board:
 
     def is_click_in_counters_zone(self, event) -> bool:
         n = len(self.speed_cont_vals)
-        return self.speed_cont_x <= event.pos[0] <= self.speed_cont_x + n*(n-1)*self.button_width \
+        return self.speed_cont_x <= event.pos[0] <= self.speed_cont_x + n * (n - 1) * self.button_width \
             and self.sub_window_size[1] + 40 <= event.pos[1] <= self.sub_window_size[1] + 40 + self.button_width \
-            and (event.pos[0] - self.speed_cont_x)//self.button_width % 2 == 0
+            and (event.pos[0] - self.speed_cont_x) // self.button_width % 2 == 0
 
     def is_click_in_modes_zone(self, event) -> bool:
         for (x, y) in self.modes_buttons_cords:
@@ -129,7 +130,7 @@ class Board:
             self.create_light_modes()
         self.total_width = 2190
         self.scrollbar_mult = (self.total_width - self.main_window_width) / (
-                    self.main_window_width - self.scrollbar_width)
+                self.main_window_width - self.scrollbar_width)
         self.main_loop()
 
     def draw_pedestrians(self):
@@ -145,14 +146,13 @@ class Board:
                         )
 
     def change_simulation_speed(self, event):
-        i = (event.pos[0] - self.speed_cont_x)//self.button_width
-        self.chosen_speed = i//2
+        i = (event.pos[0] - self.speed_cont_x) // self.button_width
+        self.chosen_speed = i // 2
 
     def change_lights_mode(self, event):
         for i in range(len(self.modes_buttons_cords)):
             if self.modes_buttons_cords[i][0] + self.button_width >= event.pos[0]:
                 self.chosen_mode = i
-                #self.engine = Engine.Engine(self.map, self.pedestrian_areas, self.chosen_mode)
                 self.engine.change_lights_mod(i)
                 return
 
@@ -167,8 +167,8 @@ class Board:
                         x_be = x_be - drawing_range[0]
                         y_be = y_be - drawing_range[1]
                     pygame.draw.rect(self.main_screen, self.colors[4],
-                                     pygame.Rect((x_be + self.scroll_x)*self.cell_size, y_be*self.cell_size,
-                                                 drawing_range[0]*self.cell_size, drawing_range[1]*self.cell_size))
+                                     pygame.Rect((x_be + self.scroll_x) * self.cell_size, y_be * self.cell_size,
+                                                 drawing_range[0] * self.cell_size, drawing_range[1] * self.cell_size))
 
         def draw_cars_from_list(cars: list, upwards: bool):
             for car in cars:
@@ -225,7 +225,7 @@ class Board:
         contour = 3
         for i in range(len(self.speed_cont_vals)):
             self.draw_square_button(x_pos, y_pos, width, contour, self.chosen_speed == i)
-            x_pos += 2*width
+            x_pos += 2 * width
 
     def draw_light_modes(self):
         width = self.button_width
@@ -235,15 +235,12 @@ class Board:
                                     self.chosen_mode == i)
 
     def main_loop(self):
-        # clock = pygame.time.Clock()
-        # iteration_interval = 500  # Czas w milisekundach między iteracjami (1 sekunda = 1000 milisekund)
         iteration_interval = 1000  # Time between iterations in ms
         elapsed_time = 0
         while True:
             if self.end_after is not None and self.engine.iter_counter >= self.end_after:
                 pygame.quit()
                 break
-                # sys.exit()
             if not self.display_needed:
                 self.engine.iteration()
                 continue
@@ -257,7 +254,6 @@ class Board:
                     print(event.pos[0], event.pos[1])
                     if event.button == 1 and self.is_click_inside_scrollbar(event):
                         self.scrollbar_pressed = True
-                        #print(event.pos[0], event.pos[1])
                     elif event.button == 1 and self.is_click_in_counters_zone(event):
                         self.change_simulation_speed(event)
                     elif event.button == 1 and self.is_click_in_modes_zone(event):
@@ -272,19 +268,13 @@ class Board:
                         self.scrollbar_x = min(self.main_window_width - self.scrollbar_width, self.scrollbar_x)
                         self.scroll_x = - self.scrollbar_x * self.scrollbar_mult
 
-            # keys = pygame.key.get_pressed()
-            # if keys[pygame.K_LEFT] and self.scroll_x < 0:
-            #     self.scroll_x += self.scroll_vel
-            # if keys[pygame.K_RIGHT] and self.scroll_x > -988:
-            #     self.scroll_x -= self.scroll_vel              # arrows movement
-
             self.draw_map()
             self.draw_scrollbar()
             self.draw_speed_control()
             self.draw_light_modes()
             self.draw_pedestrians()
             self.draw_cars()
-            if elapsed_time >= iteration_interval//self.speed_cont_vals[self.chosen_speed]:
+            if elapsed_time >= iteration_interval // self.speed_cont_vals[self.chosen_speed]:
                 self.engine.iteration()
                 elapsed_time = 0
             pygame.display.flip()
